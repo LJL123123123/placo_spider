@@ -1,0 +1,1555 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="spider_sldasm">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-6.85712070510478E-18 8.0898261080191E-17 0.0641483106740881"
+        rpy="0 0 0" />
+      <mass
+        value="7.90566638033927" />
+      <inertia
+        ixx="0.0740610072049505"
+        ixy="1.19114008207636E-18"
+        ixz="-3.43605847277178E-19"
+        iyy="0.0740610072049504"
+        iyz="-2.91899990167911E-19"
+        izz="0.140190829063453" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="Link1-1">
+    <inertial>
+      <origin
+        xyz="-1.38777878078145E-17 -0.0824991118658973 0.000966036806063971"
+        rpy="0 0 0" />
+      <mass
+        value="0.60284248189571" />
+      <inertia
+        ixx="0.00210602160556376"
+        ixy="5.42101086242752E-20"
+        ixz="-1.26331164212216E-19"
+        iyy="0.00105493812743913"
+        iyz="-4.80448449051382E-05"
+        izz="0.00156945455541681" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-1"
+    type="revolute">
+    <origin
+      xyz="0.15 -0.15 0.0616299999999999"
+      rpy="0 0 0.785398163397447" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link1-1" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link1-2">
+    <inertial>
+      <origin
+        xyz="-0.00479415322174973 -0.0847961946098215 -5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.28929926430132" />
+      <inertia
+        ixx="0.00152383905464937"
+        ixy="-3.05655686688109E-06"
+        ixz="-6.80907477562248E-20"
+        iyy="0.000667153490245799"
+        iyz="-1.00288700954909E-18"
+        izz="0.0011236331918339" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-2"
+    type="revolute">
+    <origin
+      xyz="-0.000499999999999893 -0.122 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link1-1" />
+    <child
+      link="Link1-2" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link1-3">
+    <inertial>
+      <origin
+        xyz="-0.0212856835694414 0.0162510019057966 -1.11022302462516E-16"
+        rpy="0 0 0" />
+      <mass
+        value="0.308599743887214" />
+      <inertia
+        ixx="0.000308593278300975"
+        ixy="6.96859251783211E-05"
+        ixz="-2.68525575408109E-20"
+        iyy="0.00028646456343213"
+        iyz="-4.06575814682064E-20"
+        izz="0.000370142068779215" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-3"
+    type="revolute">
+    <origin
+      xyz="0 -0.16 0"
+      rpy="0 0 -3.14159265358979" />
+    <parent
+      link="Link1-2" />
+    <child
+      link="Link1-3" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link1-4">
+    <inertial>
+      <origin
+        xyz="-5.55111512312578E-17 -0.0107888161826106 -0.0385492469461684"
+        rpy="0 0 0" />
+      <mass
+        value="0.202208844102152" />
+      <inertia
+        ixx="0.000133800346594459"
+        ixy="-6.7762635780344E-21"
+        ixz="-6.85693779921257E-21"
+        iyy="0.000134543569387916"
+        iyz="-3.58496269912012E-06"
+        izz="9.70688132526932E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-4"
+    type="fixed">
+    <origin
+      xyz="-0.0980000000000001 0.0330000000000001 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link1-3" />
+    <child
+      link="Link1-4" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link1-5">
+    <inertial>
+      <origin
+        xyz="-0.0446928785140153 5.33822984327692E-05 0.000410534681949681"
+        rpy="0 0 0" />
+      <mass
+        value="0.172400029670848" />
+      <inertia
+        ixx="9.58040310067531E-05"
+        ixy="-4.002159697695E-07"
+        ixz="-2.40028498360103E-06"
+        iyy="9.1862619595287E-05"
+        iyz="-2.49307324658601E-07"
+        izz="8.93978244481122E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-5.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-5"
+    type="fixed">
+    <origin
+      xyz="0 -0.000999979603148238 -0.0869999940509131"
+      rpy="0 -1.5707963267949 0" />
+    <parent
+      link="Link1-4" />
+    <child
+      link="Link1-5" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link1-6">
+    <inertial>
+      <origin
+        xyz="-2.77555756156289E-17 -1.11022302462516E-16 0.0183965614696087"
+        rpy="0 0 0" />
+      <mass
+        value="0.385234192705995" />
+      <inertia
+        ixx="0.000490900876230675"
+        ixy="-4.06575814682064E-20"
+        ixz="-8.11393380219746E-21"
+        iyy="0.000490900876230675"
+        iyz="-4.58031337370492E-22"
+        izz="0.000769296861776585" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-6.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link1-6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint1-6"
+    type="fixed">
+    <origin
+      xyz="-0.0695 0 0"
+      rpy="-1.5707963267949 -1.31825247088009 -1.5707963267949" />
+    <parent
+      link="Link1-5" />
+    <child
+      link="Link1-6" />
+    <!-- <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link1-7">
+    <inertial>
+      <origin
+        xyz="0. 0. 0."
+        rpy="0 0 0" />
+      <mass
+        value="0." />
+      <inertia
+        ixx="0."
+        ixy="0."
+        ixz="0."
+        iyy="0."
+        iyz="0."
+        izz="0." />
+    </inertial>
+  </link>
+   <joint
+    name="Joint1-7"
+    type="fixed">
+    <origin
+      xyz="0. 0. .173"
+      rpy="0. 0. 0." />
+    <parent
+      link="Link1-6" />
+    <child
+      link="Link1-7" />
+  </joint>
+
+  <link
+    name="Link2-1">
+    <inertial>
+      <origin
+        xyz="-1.38777878078145E-17 -0.0824991118658973 0.000966036806063968"
+        rpy="0 0 0" />
+      <mass
+        value="0.602842481895709" />
+      <inertia
+        ixx="0.00210602160556376"
+        ixy="2.16840434497101E-19"
+        ixz="3.71965579161499E-20"
+        iyy="0.00105493812743913"
+        iyz="-4.80448449051384E-05"
+        izz="0.00156945455541681" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-1"
+    type="revolute">
+    <origin
+      xyz="0.15 0.15 0.0616299999999999"
+      rpy="0 0 2.35619449019235" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link2-1" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link2-2">
+    <inertial>
+      <origin
+        xyz="-0.00479415322174973 0.0847961946098213 8.32667268468867E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.28929926430132" />
+      <inertia
+        ixx="0.00152383905464937"
+        ixy="3.05655686688129E-06"
+        ixz="-1.03399283610877E-19"
+        iyy="0.000667153490245799"
+        iyz="3.25260651745651E-19"
+        izz="0.0011236331918339" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-2"
+    type="revolute">
+    <origin
+      xyz="-0.000499999999999881 -0.121999999999999 0"
+      rpy="3.14159265358979 1.5707963267949 0" />
+    <parent
+      link="Link2-1" />
+    <child
+      link="Link2-2" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link2-3">
+    <inertial>
+      <origin
+        xyz="-0.0212856835694414 0.0162510019057966 8.32667268468867E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.308599743887214" />
+      <inertia
+        ixx="0.000308593278300975"
+        ixy="6.96859251783212E-05"
+        ixz="-6.81639446154429E-21"
+        iyy="0.00028646456343213"
+        iyz="6.7762635780344E-20"
+        izz="0.000370142068779215" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-3"
+    type="revolute">
+    <origin
+      xyz="0 0.16 0"
+      rpy="3.14159265358979 0 -3.14159265358979" />
+    <parent
+      link="Link2-2" />
+    <child
+      link="Link2-3" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link2-4">
+    <inertial>
+      <origin
+        xyz="0 -0.0107888161826107 -0.0385492469461684"
+        rpy="0 0 0" />
+      <mass
+        value="0.202208844102152" />
+      <inertia
+        ixx="0.000133800346594459"
+        ixy="-1.35525271560688E-20"
+        ixz="8.99884030175431E-21"
+        iyy="0.000134543569387916"
+        iyz="-3.58496269912012E-06"
+        izz="9.70688132526933E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-4"
+    type="fixed">
+    <origin
+      xyz="-0.0980000000000001 0.0329999999999999 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link2-3" />
+    <child
+      link="Link2-4" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link2-5">
+    <inertial>
+      <origin
+        xyz="-0.0446928785140153 5.33822984327692E-05 0.000410534681949737"
+        rpy="0 0 0" />
+      <mass
+        value="0.172400029670848" />
+      <inertia
+        ixx="9.58040310067531E-05"
+        ixy="-4.00215969769498E-07"
+        ixz="-2.40028498360102E-06"
+        iyy="9.1862619595287E-05"
+        iyz="-2.49307324658608E-07"
+        izz="8.93978244481121E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-5.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-5"
+    type="fixed">
+    <origin
+      xyz="0 -0.000999979603148238 -0.0869999940509131"
+      rpy="0 -1.5707963267949 0" />
+    <parent
+      link="Link2-4" />
+    <child
+      link="Link2-5" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link2-6">
+    <inertial>
+      <origin
+        xyz="-5.55111512312578E-17 5.55111512312578E-17 0.0183965614696088"
+        rpy="0 0 0" />
+      <mass
+        value="0.385234192705996" />
+      <inertia
+        ixx="0.00049090087623068"
+        ixy="0"
+        ixz="6.58436017643174E-21"
+        iyy="0.00049090087623068"
+        iyz="3.27781578739856E-21"
+        izz="0.000769296861776588" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-6.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link2-6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint2-6"
+    type="fixed">
+    <origin
+      xyz="-0.0695000000000001 0 0"
+      rpy="-1.5707963267949 1.14250358452081 -1.5707963267949" />
+    <parent
+      link="Link2-5" />
+    <child
+      link="Link2-6" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link2-7">
+    <inertial>
+      <origin
+        xyz="0. 0. 0."
+        rpy="0 0 0" />
+      <mass
+        value="0." />
+      <inertia
+        ixx="0."
+        ixy="0."
+        ixz="0."
+        iyy="0."
+        iyz="0."
+        izz="0." />
+    </inertial>
+  </link>
+   <joint
+    name="Joint2-7"
+    type="fixed">
+    <origin
+      xyz="0. 0. .173"
+      rpy="0. 0. 0." />
+    <parent
+      link="Link2-6" />
+    <child
+      link="Link2-7" />
+  </joint>
+
+  <link
+    name="Link3-1">
+    <inertial>
+      <origin
+        xyz="-1.38777878078145E-17 -0.0824991118658973 0.000966036806063971"
+        rpy="0 0 0" />
+      <mass
+        value="0.602842481895709" />
+      <inertia
+        ixx="0.00210602160556376"
+        ixy="-3.79470760369927E-19"
+        ixz="-4.01719369576056E-21"
+        iyy="0.00105493812743913"
+        iyz="-4.80448449051386E-05"
+        izz="0.0015694545554168" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-1"
+    type="revolute">
+    <origin
+      xyz="-0.150000000000001 0.15 0.0616299999999999"
+      rpy="0 0 -2.35619449019235" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link3-1" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link3-2">
+    <inertial>
+      <origin
+        xyz="-0.00479415322174972 -0.0847961946098216 -2.77555756156289E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.28929926430132" />
+      <inertia
+        ixx="0.00152383905464937"
+        ixy="-3.05655686688119E-06"
+        ixz="9.173237704794E-20"
+        iyy="0.0006671534902458"
+        iyz="-5.42101086242752E-19"
+        izz="0.0011236331918339" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-2"
+    type="revolute">
+    <origin
+      xyz="-0.000500000000000117 -0.121999999999999 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link3-1" />
+    <child
+      link="Link3-2" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link3-3">
+    <inertial>
+      <origin
+        xyz="-0.0212856835694414 0.0162510019057966 -5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.308599743887213" />
+      <inertia
+        ixx="0.000308593278300975"
+        ixy="6.9685925178321E-05"
+        ixz="6.7762635780344E-21"
+        iyy="0.000286464563432129"
+        iyz="0"
+        izz="0.000370142068779214" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-3"
+    type="revolute">
+    <origin
+      xyz="0 -0.16 0"
+      rpy="0 0 3.14159265358979" />
+    <parent
+      link="Link3-2" />
+    <child
+      link="Link3-3" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link3-4">
+    <inertial>
+      <origin
+        xyz="0 -0.0107888161826107 -0.0385492469461684"
+        rpy="0 0 0" />
+      <mass
+        value="0.202208844102152" />
+      <inertia
+        ixx="0.000133800346594459"
+        ixy="2.71050543121376E-20"
+        ixz="-9.94884809836956E-21"
+        iyy="0.000134543569387916"
+        iyz="-3.58496269912012E-06"
+        izz="9.70688132526931E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-4"
+    type="fixed">
+    <origin
+      xyz="-0.098 0.033 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link3-3" />
+    <child
+      link="Link3-4" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link3-5">
+    <inertial>
+      <origin
+        xyz="-0.0446928785140153 5.33822984327692E-05 0.000410534681949626"
+        rpy="0 0 0" />
+      <mass
+        value="0.172400029670848" />
+      <inertia
+        ixx="9.58040310067532E-05"
+        ixy="-4.0021596976951E-07"
+        ixz="-2.40028498360104E-06"
+        iyy="9.18626195952871E-05"
+        iyz="-2.49307324658598E-07"
+        izz="8.93978244481122E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-5.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-5"
+    type="fixed">
+    <origin
+      xyz="0 -0.000999979603148349 -0.0869999940509131"
+      rpy="0 -1.5707963267949 0" />
+    <parent
+      link="Link3-4" />
+    <child
+      link="Link3-5" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link3-6">
+    <inertial>
+      <origin
+        xyz="-1.11022302462516E-16 -5.55111512312578E-17 0.0183965614696087"
+        rpy="0 0 0" />
+      <mass
+        value="0.385234192705996" />
+      <inertia
+        ixx="0.000490900876230676"
+        ixy="-5.42101086242752E-20"
+        ixz="6.06823096857436E-21"
+        iyy="0.000490900876230676"
+        iyz="-9.6843790252344E-21"
+        izz="0.000769296861776585" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-6.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link3-6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint3-6"
+    type="fixed">
+    <origin
+      xyz="-0.0695 0 0"
+      rpy="-1.5707963267949 0.000696798524874965 -1.5707963267949" />
+    <parent
+      link="Link3-5" />
+    <child
+      link="Link3-6" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link3-7">
+    <inertial>
+      <origin
+        xyz="0. 0. 0."
+        rpy="0 0 0" />
+      <mass
+        value="0." />
+      <inertia
+        ixx="0."
+        ixy="0."
+        ixz="0."
+        iyy="0."
+        iyz="0."
+        izz="0." />
+    </inertial>
+  </link>
+   <joint
+    name="Joint3-7"
+    type="fixed">
+    <origin
+      xyz="0. 0. .173"
+      rpy="0. 0. 0." />
+    <parent
+      link="Link3-6" />
+    <child
+      link="Link3-7" />
+  </joint>
+
+  <link
+    name="Link4-1">
+    <inertial>
+      <origin
+        xyz="-1.38777878078145E-17 -0.0824991118658973 0.000966036806063973"
+        rpy="0 0 0" />
+      <mass
+        value="0.60284248189571" />
+      <inertia
+        ixx="0.00210602160556376"
+        ixy="5.42101086242752E-20"
+        ixz="-5.61385929714459E-20"
+        iyy="0.00105493812743913"
+        iyz="-4.80448449051383E-05"
+        izz="0.00156945455541681" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-1"
+    type="revolute">
+    <origin
+      xyz="-0.15 -0.15 0.0616299999999999"
+      rpy="0 0 -0.785398163397446" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link4-1" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link4-2">
+    <inertial>
+      <origin
+        xyz="-0.00479415322174971 -0.0847961946098214 5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.289299264301321" />
+      <inertia
+        ixx="0.00152383905464937"
+        ixy="-3.05655686688131E-06"
+        ixz="2.8648626015685E-20"
+        iyy="0.0006671534902458"
+        iyz="-5.96311194867027E-19"
+        izz="0.0011236331918339" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-2"
+    type="revolute">
+    <origin
+      xyz="-0.000499999999999957 -0.122 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="Link4-1" />
+    <child
+      link="Link4-2" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link4-3">
+    <inertial>
+      <origin
+        xyz="-0.0212856835694414 0.0162510019057964 -5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="0.308599743887214" />
+      <inertia
+        ixx="0.000308593278300976"
+        ixy="6.96859251783211E-05"
+        ixz="6.18334051495639E-20"
+        iyy="0.00028646456343213"
+        iyz="1.35525271560688E-20"
+        izz="0.000370142068779215" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-3"
+    type="revolute">
+    <origin
+      xyz="0 -0.16 0"
+      rpy="0 0 -3.10297210055977" />
+    <parent
+      link="Link4-2" />
+    <child
+      link="Link4-3" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link4-4">
+    <inertial>
+      <origin
+        xyz="0 -0.0107888161826106 -0.0385492469461684"
+        rpy="0 0 0" />
+      <mass
+        value="0.202208844102152" />
+      <inertia
+        ixx="0.000133800346594459"
+        ixy="6.7762635780344E-21"
+        ixz="2.26978360084551E-21"
+        iyy="0.000134543569387916"
+        iyz="-3.58496269912013E-06"
+        izz="9.70688132526932E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-4"
+    type="fixed">
+    <origin
+      xyz="-0.0980000000000001 0.0330000000000001 0"
+      rpy="-1.0873493252277 1.57079631189374 -1.03242181344867" />
+    <parent
+      link="Link4-3" />
+    <child
+      link="Link4-4" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link4-5">
+    <inertial>
+      <origin
+        xyz="-0.0446928785140153 5.33822984327692E-05 0.000410534681949681"
+        rpy="0 0 0" />
+      <mass
+        value="0.172400029670848" />
+      <inertia
+        ixx="9.58040310067531E-05"
+        ixy="-4.00215969769488E-07"
+        ixz="-2.40028498360106E-06"
+        iyy="9.1862619595287E-05"
+        iyz="-2.49307324658615E-07"
+        izz="8.93978244481121E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-5.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-5"
+    type="fixed">
+    <origin
+      xyz="0 -0.000999979603148349 -0.086999994050913"
+      rpy="-1.5707963267949 -1.53217577376487 -1.5707963267949" />
+    <parent
+      link="Link4-4" />
+    <child
+      link="Link4-5" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link4-6">
+    <inertial>
+      <origin
+        xyz="0 5.55111512312578E-17 0.0183965614696087"
+        rpy="0 0 0" />
+      <mass
+        value="0.385234192705995" />
+      <inertia
+        ixx="0.000490900876230676"
+        ixy="1.35525271560688E-20"
+        ixz="1.93993901159539E-21"
+        iyy="0.000490900876230676"
+        iyz="5.68263337380581E-21"
+        izz="0.000769296861776584" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-6.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="/home/placo-examples/spider_sldasm/meshes/Link4-6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint4-6"
+    type="fixed">
+    <origin
+      xyz="-0.0695 0 0"
+      rpy="1.5707963267949 -0.961024426277111 1.5707963267949" />
+    <parent
+      link="Link4-5" />
+    <child
+      link="Link4-6" />
+    <!-- <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="Link4-7">
+    <inertial>
+      <origin
+        xyz="0. 0. 0."
+        rpy="0 0 0" />
+      <mass
+        value="0." />
+      <inertia
+        ixx="0."
+        ixy="0."
+        ixz="0."
+        iyy="0."
+        iyz="0."
+        izz="0." />
+    </inertial>
+  </link>
+   <joint
+    name="Joint4-7"
+    type="fixed">
+    <origin
+      xyz="0. 0. .173"
+      rpy="0. 0. 0." />
+    <parent
+      link="Link4-6" />
+    <child
+      link="Link4-7" />
+  </joint>
+
+</robot>
