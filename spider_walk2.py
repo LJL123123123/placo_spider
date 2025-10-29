@@ -169,7 +169,7 @@ leg2_support_target = np.append(position_leg2_xy, 0.0)
 leg3_support_target = np.append(position_leg3_xy, 0.0)
 leg4_support_target = np.append(position_leg4_xy, 0.0)
 base_target = np.append(position_body_xy, 0.0) + np.array(high)
-v_vector=np.array([1.0, 1.0 , 0.0])
+v_vector=np.array([1.0, 0.0 , 0.0])
 # 确保初始方向为单位向量（只影响模长）
 norm_v = np.linalg.norm(v_vector)
 if norm_v > 0:
@@ -222,14 +222,15 @@ def rotate_vector_z(v, angle_rad):
 
 
 # 键盘控制参数
+SPEED_DELTA = 0.1
 STEP_DELTA = 0.01         # 每次按 w/s 改变的 step_length
 ROT_DEG = 10.0            # 每次按 a/d 旋转角度（度）
 ROT_RAD = math.radians(ROT_DEG)
-
+speed = 1.0
 
 def process_key(key):
     """根据按键调整全局 v_vector 和 step_length。"""
-    global v_vector, step_length
+    global v_vector, step_length, speed
     if key is None:
         return
     k = key.lower()
@@ -245,6 +246,12 @@ def process_key(key):
     elif k == 'd':
         v_vector = rotate_vector_z(v_vector, -ROT_RAD)
         print(f"v_vector -> [{v_vector[0]:.3f}, {v_vector[1]:.3f}]")
+    elif k == '+':
+        speed += SPEED_DELTA
+        print(f"speed -> {speed:.3f}")
+    elif k == '-':
+        speed -= SPEED_DELTA
+        print(f"speed -> {speed:.3f}")
     # 吞掉换行等不可见字符
 def target_update(dt,t,flying_leg):
     global target,base_target,leg1_support_target,leg2_support_target,leg3_support_target,leg4_support_target,v
@@ -421,7 +428,6 @@ def task_update(flying_leg):
             # leg4.target_world = target
             
 flying_leg = 1
-
 def gait(t):
     global flying_leg,set_com_flag
     if t % 12 < 3:
@@ -438,7 +444,7 @@ def gait(t):
 @schedule(interval=dt)
 def loop():
     global t, target, last_sample_t,flying_leg
-    t += 1.0*dt
+    t += speed*dt
     # 非阻塞查询键盘输入并处理
     try:
         key = get_key_nonblocking()
