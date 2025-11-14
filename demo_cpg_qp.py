@@ -167,14 +167,7 @@ def main():
             #     print(f"t={t:.2f} LF foot pos: {foot_pos}")
 
             # 将机体位置加到足端偏移，得到世界坐标目标（简化假设）
-            if foot == "LF":
-                foot_pos["LF"] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35])
-            elif foot == "LH":
-                foot_pos["LH"] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35])
-            elif foot == "RF":
-                foot_pos["RF"] = cpg.generate_foot_position(foot, t) + np.array([0, 0, 0.35])
-            elif foot == "RH":
-                foot_pos["RH"] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35])
+            foot_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height]) + body_pos
 
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
@@ -184,9 +177,9 @@ def main():
                 #            , "soft"
                 #            , 1)
                 leg_tasks[foot].target_world = foot_pos[foot]
-                leg_tasks[foot].configure(leg_foot_name_map[foot]
-                           , "soft"
-                           , 1)
+                # leg_tasks[foot].configure(leg_foot_name_map[foot]
+                #            , "soft"
+                #            , 1)
                 # 可视化目标点
                 if point_viz is not None:
                     point_viz(f"target_{foot}", foot_pos[foot], color=0x00FF00)
