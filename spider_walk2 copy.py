@@ -112,7 +112,7 @@ leg2_swim.configure("Link2-6", "soft", 0)
 leg3_swim.configure("Link3-6", "soft", 0)
 leg4_swim.configure("Link4-6", "soft", 0)
 
-base_task = solver.add_position_task("base_link", np.array(high))
+base_task = solver.add_position_task("base_link", np.array([0,0, 0.193492]))
 base_task.configure("base_link", "soft", 0)
 
 def get_xyz_from_trajectory(t):
@@ -284,7 +284,7 @@ def task_update(flying_leg):
     
     # print("target:", id(target))
 
-    base_task.configure("base_link", "soft", 1e2)
+    base_task.configure("base_link", "soft", 1e6)
     base_task.target_world = base_target
     # print("base_target:", base_target)
 
@@ -296,8 +296,8 @@ def task_update(flying_leg):
                     position_leg2_xy,
                     position_leg4_xy
                 ])
-                com = solver.add_com_polygon_constraint(polygon, 0.015)
-                # com.configure("com_constraint", "soft", 2.0)
+                # com = solver.add_com_polygon_constraint(polygon, 0.015)
+                # com.configure("com_constraint", "soft", 1.0)
                 set_com_flag = False
 
                 leg1.configure("Link1-6", "soft", 0.0)
@@ -331,8 +331,8 @@ def task_update(flying_leg):
                 position_leg1_xy,
                 position_leg4_xy
                 ])
-                com = solver.add_com_polygon_constraint(polygon, 0.015)
-                # com.configure("com_constraint", "soft", 2.0)
+                # com = solver.add_com_polygon_constraint(polygon, 0.015)
+                # com.configure("com_constraint", "soft", 1.0)
                 set_com_flag = False
 
                 leg1.configure("Link1-6", "soft", 1e6)
@@ -365,8 +365,8 @@ def task_update(flying_leg):
                 position_leg1_xy,
                 position_leg2_xy
                 ])
-                com = solver.add_com_polygon_constraint(polygon, 0.015)
-                # com.configure("com_constraint", "soft", 2.0)
+                # com = solver.add_com_polygon_constraint(polygon, 0.015)
+                # com.configure("com_constraint", "soft", 1.0)
                 set_com_flag = False
 
                 leg1.configure("Link1-6", "soft", 1e6)
@@ -391,7 +391,7 @@ def task_update(flying_leg):
 
             leg3_swim.target = target - np.array(high)
             # leg3.target_world = target
-            # print("leg3_swim.target:", leg3_swim.target)
+            # print("leg3.target_world:", leg3.target_world)
 
         case 4:
             if(set_com_flag):
@@ -400,8 +400,8 @@ def task_update(flying_leg):
                 position_leg1_xy,
                 position_leg2_xy
                 ])
-                com = solver.add_com_polygon_constraint(polygon, 0.0105)
-                # com.configure("com_constraint", "soft", 2.0)
+                # com = solver.add_com_polygon_constraint(polygon, 0.015)
+                # com.configure("com_constraint", "soft", 1.0)
                 set_com_flag = False
 
                 leg1.configure("Link1-6", "soft", 1e6)
