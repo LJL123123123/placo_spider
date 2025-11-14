@@ -33,7 +33,7 @@ import os
 import numpy as np
 
 try:
-    from ischedule import schedule, run_loop
+    from ischedule  import schedule, run_loop
 except Exception:
     # 如果没有 ischedule，提供一个非常小的替代实现（仅用于脚本直接运行）
     def schedule(interval=0.01):
@@ -65,7 +65,7 @@ def main():
     total_time = 5.0
     toc = 2.5
     dt = 0.02
-    step_length = 0.1
+    step_length = 0.4
     body_height = 0.05
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
@@ -74,8 +74,8 @@ def main():
         total_time=total_time,
         toc=toc,
         break_time=0.1,
-        step_height=0.01,
-        step_length=step_length,
+        step_height=0.05,
+        step_length=step_length / 4,
         body_height=body_height,
         foot_spacing=0.1
     )
@@ -102,26 +102,40 @@ def main():
         "RF": solver.add_position_task("leg3", np.array([0.15, 0.0, 0.0])),
         "RH": solver.add_position_task("leg2", np.array([0.02, -0.15, 0.0])),
     }
-    leg_swim_task = {
-        "LH": solver.add_relative_position_task("body","leg1", np.array([-0.15, 0.0, 0.0])),
-        "LF": solver.add_relative_position_task("body","leg4", np.array([0.02, -0.15, 0.0])),
-        "RF": solver.add_relative_position_task("body","leg3", np.array([0.15, 0.0, 0.0])),
-        "RH": solver.add_relative_position_task("body","leg2", np.array([0.02, 0.15, 0.0])),
+    leg_swim_tasks = {
+        "LH": solver.add_relative_position_task("body","leg1", np.array([-0.15, 0.0, -body_height])),
+        "LF": solver.add_relative_position_task("body","leg4", np.array([0.02, 0.15, -body_height])),
+        "RF": solver.add_relative_position_task("body","leg3", np.array([0.15, 0.0, -body_height])),
+        "RH": solver.add_relative_position_task("body","leg2", np.array([0.02, -0.15, -body_height])),
     }
     
     # 配置足端任务优先级
-    leg_swim_task["RF"].configure("leg3"
+    leg_tasks["RF"].configure("leg3"
                            , "soft"
                            , 0)
-    leg_swim_task["LF"].configure("leg4"
+    leg_tasks["LF"].configure("leg4"
                            , "soft"
                            , 0)
-    leg_swim_task["LH"].configure("leg1"
+    leg_tasks["LH"].configure("leg1"
                            , "soft"
                            , 0)
-    leg_swim_task["RH"].configure("leg2"
+    leg_tasks["RH"].configure("leg2"
                            , "soft"
                            , 0)
+
+    # 配置足端任务优先级
+    leg_swim_tasks["RF"].configure("leg3"
+                           , "soft"
+                           , 1e1)
+    leg_swim_tasks["LF"].configure("leg4"
+                           , "soft"
+                           , 1e1)
+    leg_swim_tasks["LH"].configure("leg1"
+                           , "soft"
+                           , 1e1)
+    leg_swim_tasks["RH"].configure("leg2"
+                           , "soft"
+                           , 1e1)
 
     # body task
     body_task = solver.add_position_task("body", np.array([0.0, 0.0, body_height]))
@@ -143,7 +157,18 @@ def main():
     # 假设 CPG 输出的坐标系是机体坐标系，直接作为 leg target 的偏移
     # 映射说明：CPG 的 ['LF','RF','LH','RH'] 映射到上面 leg_tasks 的键
     # 这里我们选择 LF->leg1, LH->leg2, RF->leg3, RH->leg4（与上面创建一致）
-
+    foot_pos = {
+            "LF": np.array([0.0, 0.0, 0.0]),
+            "LH": np.array([0.0, 0.0, 0.0]),
+            "RF": np.array([0.0, 0.0, 0.0]),
+            "RH": np.array([0.0, 0.0, 0.0]),
+        }
+    foot_swim_pos = {
+            "LF": np.array([0.0, 0.0, 0.0]),
+            "LH": np.array([0.0, 0.0, 0.0]),
+            "RF": np.array([0.0, 0.0, 0.0]),
+            "RH": np.array([0.0, 0.0, 0.0]),
+        }
     @schedule(interval=dt)
     def loop():
         nonlocal t
@@ -153,21 +178,17 @@ def main():
         body_pos = np.array([0.0 + step_length * (t / duration), 0.0, body_height])
         body_task.target_world = body_pos
 
-        foot_pos = {
-            "LF": np.array([0.0, 0.0, 0.0]),
-            "LH": np.array([0.0, 0.0, 0.0]),
-            "RF": np.array([0.0, 0.0, 0.0]),
-            "RH": np.array([0.0, 0.0, 0.0]),
-        }
         # 为每个足端取 CPG 输出并设置为对应 leg 的目标
         for foot in cpg.foot_names:
             # CPG 生成的足端位置（相对于机体中心）
             # foot_pos = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.50])
-            # if foot == "LF":
-            #     print(f"t={t:.2f} LF foot pos: {foot_pos}")
 
             # 将机体位置加到足端偏移，得到世界坐标目标（简化假设）
-            foot_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height]) + body_pos
+            foot_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35])
+            foot_swim_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height])
+            # if foot == "LF":
+            #     print(f"t={t:.2f} LF foot pos: {foot_pos[foot]} foot_swim_pos: {foot_swim_pos[foot]}")
+            
 
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
@@ -176,10 +197,16 @@ def main():
                 #     leg_tasks[foot].configure("leg3"
                 #            , "soft"
                 #            , 1)
-                leg_tasks[foot].target_world = foot_pos[foot]
-                # leg_tasks[foot].configure(leg_foot_name_map[foot]
-                #            , "soft"
-                #            , 1)
+                leg_swim_tasks[foot].target = foot_swim_pos[foot]
+                # if foot == "LF":
+                #     # leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
+                #     #        , "soft"
+                #     #        , 1)
+                #     print(f"LF foot pos: {foot_swim_pos[foot]} leg_swim_tasks[foot].target_world: {leg_swim_tasks[foot].target_world}")
+                # else:
+                # leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
+                #         , "soft"
+                #         , 0)
                 # 可视化目标点
                 if point_viz is not None:
                     point_viz(f"target_{foot}", foot_pos[foot], color=0x00FF00)
