@@ -108,34 +108,6 @@ def main():
         "RF": solver.add_relative_position_task("body","leg3", np.array([0.15, 0.0, -body_height])),
         "RH": solver.add_relative_position_task("body","leg2", np.array([0.02, -0.15, -body_height])),
     }
-    
-    # 配置足端任务优先级
-    leg_tasks["RF"].configure("leg3"
-                           , "soft"
-                           , 0)
-    leg_tasks["LF"].configure("leg4"
-                           , "soft"
-                           , 0)
-    leg_tasks["LH"].configure("leg1"
-                           , "soft"
-                           , 0)
-    leg_tasks["RH"].configure("leg2"
-                           , "soft"
-                           , 0)
-
-    # 配置足端任务优先级
-    leg_swim_tasks["RF"].configure("leg3"
-                           , "soft"
-                           , 1e1)
-    leg_swim_tasks["LF"].configure("leg4"
-                           , "soft"
-                           , 1e1)
-    leg_swim_tasks["LH"].configure("leg1"
-                           , "soft"
-                           , 1e1)
-    leg_swim_tasks["RH"].configure("leg2"
-                           , "soft"
-                           , 1e1)
 
     # body task
     body_task = solver.add_position_task("body", np.array([0.0, 0.0, body_height]))
@@ -181,32 +153,33 @@ def main():
         # 为每个足端取 CPG 输出并设置为对应 leg 的目标
         for foot in cpg.foot_names:
             # CPG 生成的足端位置（相对于机体中心）
-            # foot_pos = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.50])
+
 
             # 将机体位置加到足端偏移，得到世界坐标目标（简化假设）
-            foot_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35])
+            foot_pos[foot] = robot.get_T_world_frame(leg_foot_name_map[foot])[:3, 3]
+            foot_pos[2] = 0.0
             foot_swim_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height])
-            # if foot == "LF":
-            #     print(f"t={t:.2f} LF foot pos: {foot_pos[foot]} foot_swim_pos: {foot_swim_pos[foot]}")
             
 
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
-                # if foot_pos[foot][2] > 0.50:
-                #     leg_swim_task[foot].target_world = foot_pos[foot]
-                #     leg_tasks[foot].configure("leg3"
-                #            , "soft"
-                #            , 1)
-                leg_swim_tasks[foot].target = foot_swim_pos[foot]
-                # if foot == "LF":
-                #     # leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
-                #     #        , "soft"
-                #     #        , 1)
-                #     print(f"LF foot pos: {foot_swim_pos[foot]} leg_swim_tasks[foot].target_world: {leg_swim_tasks[foot].target_world}")
-                # else:
-                # leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
-                #         , "soft"
-                #         , 0)
+                if foot_swim_pos[foot][2] > -0.05:
+                    leg_swim_tasks[foot].target = foot_swim_pos[foot]
+                    leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
+                           , "soft"
+                           , 1)
+                    leg_tasks[foot].configure(leg_foot_name_map[foot]
+                           , "soft"
+                           , 0)
+                else:
+                    leg_tasks[foot].target_world = foot_pos[foot]
+                    leg_tasks[foot].configure(leg_foot_name_map[foot]
+                           , "soft"
+                           , 1)
+                    leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
+                           , "soft"
+                           , 0)
+
                 # 可视化目标点
                 if point_viz is not None:
                     point_viz(f"target_{foot}", foot_pos[foot], color=0x00FF00)
