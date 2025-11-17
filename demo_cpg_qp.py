@@ -59,6 +59,8 @@ sys.path.append(os.path.join(ROOT, 'src'))
 
 from cpg_go1_simulation.stein.foot_trajectory_cpg import FootTrajectoryCPG
 
+v_vector = [1,0,0]
+face_vector = [1,0,0]
 
 def main():
     # CPG 配置
@@ -141,6 +143,8 @@ def main():
             "RF": np.array([0.0, 0.0, 0.0]),
             "RH": np.array([0.0, 0.0, 0.0]),
         }
+
+    
     @schedule(interval=dt)
     def loop():
         nonlocal t
@@ -193,10 +197,10 @@ def main():
             viz.display(robot.state.q)
 
         # 结束条件
-        if t >= duration:
-            # 停止调度循环
-            # ischedule 的 run_loop 会结束于程序退出，这里仅做提示
-            print("Demo 运行完毕。")
+        # if t >= duration:
+        #     # 停止调度循环
+        #     # ischedule 的 run_loop 会结束于程序退出，这里仅做提示
+        #     print("Demo 运行完毕。")
 
     # 运行调度循环（如果存在 ischedule 的 run_loop）
     try:
