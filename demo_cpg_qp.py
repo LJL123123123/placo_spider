@@ -86,6 +86,8 @@ def main():
     if placo is None:
         print("placo 不可用，退出 demo")
         return
+    else:
+        print("placo 可用，创建机器人与求解器")
 
     robot = placo.RobotWrapper("/home/placo-examples/models/quadruped", placo.Flags.ignore_collisions)
     solver = placo.KinematicsSolver(robot)
@@ -122,6 +124,32 @@ def main():
 
     # 可视化器
     viz = robot_viz(robot) if robot_viz is not None else None
+    # --- set up MuJoCo simulation helper (mujoco_sim.py) ---
+    use_mujoco = False
+    sim_helper = None
+    
+    try:
+        print('prepare for mujoco sim helper')
+        from mujoco_sim import MuJoCoSim
+        print('MuJoCo helper available.')
+        sim_helper = MuJoCoSim('/home/placo_cpg/models/quadruped/scene.xml')
+        use_mujoco = bool(getattr(sim_helper, 'available', False))
+        if not use_mujoco:
+            sim_helper = None
+            print('MuJoCo helper unavailable, falling back to previous viz (if any).')
+        else:
+            # print actuator -> joint mapping to help verify motor ordering
+            print('Actuator mapping (actuator_index -> (qposadr, dofadr, joint_name)):', flush=True)
+            for i, m in enumerate(sim_helper.act_map):
+                print(f'  {i}: {m}', flush=True)
+            # start viewer explicitly (do not auto-launch on import)
+            try:
+                started = sim_helper.start_viewer()
+                print(f'sim_helper.start_viewer() -> {started}', flush=True)
+            except Exception as e:
+                print('sim_helper.start_viewer() raised:', e, flush=True)
+    except Exception as e:
+        print('MuJoCo helper unavailable, falling back to previous viz (if any):', e)
 
     # 运行仿真循环：将 CPG 输出的足端位置作为任务目标
     t = 0.0
@@ -192,11 +220,53 @@ def main():
         solver.solve(True)
         robot.update_kinematics()
 
-        # 可视化机器人
-        if viz is not None:
-            viz.display(robot.state.q)
+        q = robot.state.q
+        qd = robot.state.qd
+        qdd = robot.state.qdd
+        # print( f"q: {q}" )
+        # print( f"dq: {qd}" )
+        # print( f"ddq: {qdd}" )
 
-        # 结束条件
+        # 可视化机器人: 使用 MuJoCo 仿真替代原有 viz
+        if use_mujoco and sim_helper is not None:
+            # target state q: try to use robot.state.q, otherwise fallback to example vector
+            try:
+                q_target = np.asarray(robot.state.q)
+                
+            except Exception:
+                q_target = np.array([0.02879997, 0., 0.05, 0., 0., 0., 1.,
+                                     0.70191237, -0.51864883, 1.48555772,
+                                     0.97934966, -0.70745988, 2.24408594,
+                                     1.06774713, -0.62819484, 1.96654732,
+                                     1.25845303, -0.43142328, 1.48984719])
+            # Ensure q_target has 7 (base) + 12 (joints) = 19 elements
+            if q_target.size < 19:
+                qt = np.zeros(19)
+                qt[:min(q_target.size, 19)] = q_target[:min(q_target.size, 19)]
+                q_target = qt
+
+            # PD gains (tweak if robot is too aggressive)
+            KP = 0.1
+            KD = 0.01
+
+            # compute number of physics steps per control step based on model timestep
+            try:
+                if getattr(sim_helper, '_use_new', False):
+                    timestep = float(sim_helper.model.opt.timestep)
+                else:
+                    timestep = float(sim_helper.sim.model.opt.timestep)
+            except Exception:
+                timestep = 0.001
+            steps = max(1, int(round(dt / timestep)))
+
+            # print debug info immediately (avoid buffering when viewer/server runs)
+            print(f'q_target size={q_target.size}, timestep={timestep}, steps per control={steps}', flush=True)
+            sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)
+        else:
+            if viz is not None:
+                viz.display(robot.state.q)
+
+        # # 结束条件
         # if t >= duration:
         #     # 停止调度循环
         #     # ischedule 的 run_loop 会结束于程序退出，这里仅做提示
@@ -205,9 +275,24 @@ def main():
     # 运行调度循环（如果存在 ischedule 的 run_loop）
     try:
         run_loop()
+    except KeyboardInterrupt:
+        # allow graceful shutdown of viewer/server started by mujoco
+        print("Simulation interrupted by user", flush=True)
+        try:
+            if sim_helper is not None and getattr(sim_helper, 'viewer', None) is not None:
+                try:
+                    sim_helper.viewer.close()
+                except Exception:
+                    try:
+                        sim_helper.viewer.finish()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return
     except Exception:
         # 如果 ischedule 不可用，手动运行简化循环
-        print("使用降级循环运行 demo（没有 ischedule）")
+        print("使用降级循环运行 demo（没有 ischedule）", flush=True)
         steps = int(duration / dt)
         for _ in range(steps):
             loop()
