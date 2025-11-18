@@ -118,10 +118,15 @@ class MuJoCoSim:
             for a in range(nu):
                 try:
                     trn = sim.model.actuator_trnid[a]
-                    joint_id = int(trn[1])
-                    qpos_adr = int(sim.model.jnt_qposadr[joint_id])
-                    dof_adr = int(sim.model.jnt_dofadr[joint_id])
-                    joint_name = sim.model.joint_names[joint_id]
+                    # actuator_trnid stores target id(s); in mujoco_py the first
+                    # element is the joint id for motor actuators (second may be -1).
+                    joint_id = int(trn[0])
+                    if joint_id >= 0:
+                        qpos_adr = int(sim.model.jnt_qposadr[joint_id])
+                        dof_adr = int(sim.model.jnt_dofadr[joint_id])
+                        joint_name = sim.model.joint_names[joint_id]
+                    else:
+                        raise Exception('invalid joint id')
                 except Exception:
                     try:
                         act_name = sim.model.actuator_names[a]

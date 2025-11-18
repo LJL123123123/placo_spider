@@ -86,8 +86,6 @@ def main():
     if placo is None:
         print("placo 不可用，退出 demo")
         return
-    else:
-        print("placo 可用，创建机器人与求解器")
 
     robot = placo.RobotWrapper("/home/placo-examples/models/quadruped", placo.Flags.ignore_collisions)
     solver = placo.KinematicsSolver(robot)
@@ -129,14 +127,11 @@ def main():
     sim_helper = None
     
     try:
-        print('prepare for mujoco sim helper')
         from mujoco_sim import MuJoCoSim
-        print('MuJoCo helper available.')
         sim_helper = MuJoCoSim('/home/placo_cpg/models/quadruped/scene.xml')
         use_mujoco = bool(getattr(sim_helper, 'available', False))
         if not use_mujoco:
             sim_helper = None
-            print('MuJoCo helper unavailable, falling back to previous viz (if any).')
         else:
             # print actuator -> joint mapping to help verify motor ordering
             print('Actuator mapping (actuator_index -> (qposadr, dofadr, joint_name)):', flush=True)
