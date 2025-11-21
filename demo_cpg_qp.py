@@ -68,7 +68,7 @@ def main():
     toc = 2.5
     dt = 0.02
     step_length = 0.4
-    body_height = 0.05
+    body_height = 0.08
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
         before_ftype=1,
@@ -171,7 +171,7 @@ def main():
     @schedule(interval=dt)
     def loop():
         nonlocal t
-        t += dt
+        t += 1.0*dt
 
         # 更新 body 期望（简单前进或保持不动）
         body_pos = np.array([0.0 + step_length * (t / duration), 0.0, body_height])
@@ -184,7 +184,7 @@ def main():
 
             # 将机体位置加到足端偏移，得到世界坐标目标（简化假设）
             foot_pos[foot] = robot.get_T_world_frame(leg_foot_name_map[foot])[:3, 3]
-            foot_pos[2] = 0.0
+            # foot_pos[2] = 0.0
             foot_swim_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height])
             
 
@@ -211,6 +211,8 @@ def main():
                 if point_viz is not None:
                     point_viz(f"target_{foot}", foot_pos[foot], color=0x00FF00)
 
+        # print(f'LF : {foot_pos["LF"]}')
+        
         # 求解并更新机器人状态
         solver.solve(True)
         robot.update_kinematics()
@@ -241,8 +243,8 @@ def main():
                 q_target = qt
 
             # PD gains (tweak if robot is too aggressive)
-            KP = 0.1
-            KD = 0.01
+            KP = 0.65
+            KD = 0.0125 * KP
 
             # compute number of physics steps per control step based on model timestep
             try:
@@ -251,12 +253,31 @@ def main():
                 else:
                     timestep = float(sim_helper.sim.model.opt.timestep)
             except Exception:
-                timestep = 0.001
+                timestep = 0.01
             steps = max(1, int(round(dt / timestep)))
 
             # print debug info immediately (avoid buffering when viewer/server runs)
-            print(f'q_target size={q_target.size}, timestep={timestep}, steps per control={steps}', flush=True)
-            sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)
+            # print(f'q_target ={q_target}, timestep={timestep}, steps per control={steps}', flush=True)
+            sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)           
+            viz.display(robot.state.q)
+
+            # # 从 MuJoCo 获取关节 qpos，并替换 robot.state.q 的后 12 位
+            # q_current = np.asarray(robot.state.q).copy()
+            # qpos = np.asarray(sim_helper.get_qpos()).flatten()
+            # # 确保 q_current 至少有 7+12=19 个元素（base + 12 joints）
+            # if q_current.size < 19:
+            #     q_new = np.zeros(19)
+            #     q_new[:q_current.size] = q_current
+            #     q_current = q_new
+            # # 将 qpos 放到末尾 12 位（若 qpos 少于 12，则填充可用部分）
+            # if qpos.size >= 12:
+            #     q_current[-12:] = qpos[:12]
+            # else:
+            #     q_current[-qpos.size:] = qpos
+            # # print(f'q_current {q_current.size} elements, expected at least 19.')
+            # robot.state.q = q_current
+            # robot.update_kinematics()
+
         else:
             if viz is not None:
                 viz.display(robot.state.q)

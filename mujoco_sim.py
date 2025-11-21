@@ -232,6 +232,34 @@ class MuJoCoSim:
             except Exception:
                 pass
 
+    def get_qpos(self):
+        if not self.available:
+            return None
+
+        current_qpos = np.zeros(12)
+
+        if self._use_new:
+            model = self.model
+            data = self.data
+            for a, (qpos_adr, dof_adr, joint_name) in enumerate(self.act_map):
+                if qpos_adr >= 0 and dof_adr >= 0 and dof_adr < model.nv:
+                    current_qpos[a] = float(data.qpos[a])
+                else:
+                    current_qpos[a] = 0.0
+
+        else:
+            # mujoco_py backend
+            sim = self.sim
+            model = sim.model
+            data = sim.data
+            for a, (qpos_adr, dof_adr, joint_name) in enumerate(self.act_map):
+                if qpos_adr >= 0 and dof_adr >= 0 and dof_adr < model.nv:
+                    current_qpos[a] = float(data.qpos[a])
+                else:
+                    current_qpos[a] = 0.0
+
+        return current_qpos
+
     def start_viewer(self) -> bool:
         """Start or attach a viewer for the current backend. Returns True if a
         viewer was successfully started/attached.
