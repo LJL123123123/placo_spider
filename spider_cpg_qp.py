@@ -68,8 +68,8 @@ def main():
     total_time = 5.0
     toc = 2.5
     dt = 0.02
-    step_length = 0.4
-    body_height = 0.09
+    step_length = 1.2
+    body_height = 0.19287
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
         before_ftype=1,
@@ -80,7 +80,7 @@ def main():
         step_height=0.05,
         step_length=step_length / 4,
         body_height=body_height,
-        foot_spacing=0.1
+        foot_spacing=0.4
     )
 
     # 创建机器人与求解器（尽量与 quadruped_targets-CoM-tra.py 保持一致）
@@ -88,43 +88,43 @@ def main():
         print("placo 不可用，退出 demo")
         return
 
-    robot = placo.RobotWrapper("/home/placo-examples/models/quadruped", placo.Flags.ignore_collisions)
+    robot = placo.RobotWrapper("/home/placo_cpg/spider_sldasm/urdf", placo.Flags.ignore_collisions)
     solver = placo.KinematicsSolver(robot)
 
     # 创建任务：四个足端和机身
     # 假设 leg 名称为 leg1..leg4，与 quadruped_targets 示例一致
     leg_foot_name_map = {
-        "LH" : "leg1",
-        "RH" : "leg2",
-        "RF" : "leg3",
-        "LF" : "leg4",
+        "LH" : "Link3-6",
+        "RH" : "Link4-6",
+        "RF" : "Link1-6",
+        "LF" : "Link2-6",
     }
     leg_tasks = {
-        "LH": solver.add_position_task("leg1", np.array([-0.15, 0.0, 0.0])),
-        "LF": solver.add_position_task("leg4", np.array([0.02, 0.15, 0.0])),
-        "RF": solver.add_position_task("leg3", np.array([0.15, 0.0, 0.0])),
-        "RH": solver.add_position_task("leg2", np.array([0.02, -0.15, 0.0])),
+        "LH": solver.add_position_task("Link3-6", np.array([-0.378168, 0.371678, 0.0])),
+        "LF": solver.add_position_task("Link2-6", np.array([0.372385, 0.371678, 0.0])),
+        "RF": solver.add_position_task("Link1-6", np.array([0.371678, -0.372385, 0.0])),
+        "RH": solver.add_position_task("Link4-6", np.array([-0.361251, -0.360544, 0.0])),
     }
     leg_swim_tasks = {
-        "LH": solver.add_relative_position_task("body","leg1", np.array([-0.15, 0.0, -body_height])),
-        "LF": solver.add_relative_position_task("body","leg4", np.array([0.02, 0.15, -body_height])),
-        "RF": solver.add_relative_position_task("body","leg3", np.array([0.15, 0.0, -body_height])),
-        "RH": solver.add_relative_position_task("body","leg2", np.array([0.02, -0.15, -body_height])),
+        "LH": solver.add_relative_position_task("base_link","Link3-6", np.array([-0.378168, 0.371678, -body_height])),
+        "LF": solver.add_relative_position_task("base_link","Link2-6", np.array([0.372385, 0.371678, -body_height])),
+        "RF": solver.add_relative_position_task("base_link","Link1-6", np.array([0.371678, -0.372385, -body_height])),
+        "RH": solver.add_relative_position_task("base_link","Link4-6", np.array([-0.361251, -0.360544, -body_height])),
     }
 
-    # body task
-    body_task = solver.add_position_task("body", np.array([0.0, 0.0, body_height]))
-    body_init_task = solver.add_frame_task("body", tf.translation_matrix([0.0, 0.0, body_height]))
-    body_init_task.configure("body", "soft", 1.0, 1e6)
-    body_task.configure("body"
+    # base_link task
+    body_task = solver.add_position_task("base_link", np.array([0.0, 0.0, body_height]))
+    body_init_task = solver.add_frame_task("base_link", tf.translation_matrix([0.0, 0.0, body_height]))
+    body_init_task.configure("base_link", "soft", 1.0, 1e6)
+    body_task.configure("base_link"
                     , "soft"                    
                     , 1e2
                     )
 
     polygon = np.array([
-                    np.array([0.02, 0.15]),
-                    np.array([0.15, 0.0]),
-                    np.array([0.02, -0.15])
+                    np.array([0.372385, 0.371678]),
+                    np.array([0.371678, -0.372385]),
+                    np.array([-0.361251, -0.360544])
                 ])
     com = solver.add_com_polygon_constraint(polygon, 0.15)
     com.polygon = polygon
@@ -162,7 +162,7 @@ def main():
 
     # 假设 CPG 输出的坐标系是机体坐标系，直接作为 leg target 的偏移
     # 映射说明：CPG 的 ['LF','RF','LH','RH'] 映射到上面 leg_tasks 的键
-    # 这里我们选择 LF->leg1, LH->leg2, RF->leg3, RH->leg4（与上面创建一致）
+    # 这里我们选择 LF->leg1, LH->Link2-6, RF->Link3-6, RH->leg4（与上面创建一致）
     foot_pos = {
             "LF": np.array([0.0, 0.0, 0.0]),
             "LH": np.array([0.0, 0.0, 0.0]),
@@ -189,7 +189,7 @@ def main():
         nonlocal t
         t += 0.5*dt
 
-        # 更新 body 期望（简单前进或保持不动）
+        # 更新 base_link 期望（简单前进或保持不动）
         body_pos = np.array([0.0 + step_length * (t / duration), 0.0, body_height])
         body_task.target_world = body_pos
 
@@ -206,7 +206,7 @@ def main():
             
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
-                if foot_swim_pos[foot][2] > -0.05:
+                if foot_swim_pos[foot][2] > -body_height:
                     leg_swim_tasks[foot].target = foot_swim_pos[foot]
                     leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"

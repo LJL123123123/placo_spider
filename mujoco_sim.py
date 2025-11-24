@@ -178,11 +178,12 @@ class MuJoCoSim:
                     qvel_val = float(data.qvel[dof_adr])
                     # desired joint q is at desired_qpos[qpos_adr]
                     q_des = float(desired_qpos[qpos_adr])
-                    torque = kp * (q_des - qpos_val) - kd * qvel_val
+                    torque = kp * (q_des - qpos_val) - kd * qvel_val 
                     data.ctrl[a] = float(torque)
                 else:
                     data.ctrl[a] = 0.0
 
+            data.ctrl += data.qfrc_gravcomp  # add gravity compensation
             # step
             for _ in range(steps):
                 mj.mj_step(model, data)
