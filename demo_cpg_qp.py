@@ -54,9 +54,13 @@ except Exception as e:
     robot_viz = None
     point_viz = None
 
-# 将 src 路径加入 sys.path，以便导入本地 CPG 实现
-ROOT = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(os.path.join(ROOT, 'src'))
+# 将工作区内的本地 src 路径加入 sys.path，以便优先导入工作区代码而不是已安装的包
+# 之前的实现计算两级父目录导致添加了 `/home/src`，无法找到本地仓库的 src。
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# 优先插入本地 cpg_go1_simulation 的 src（常见仓库布局）
+sys.path.insert(0, os.path.join(SCRIPT_DIR, 'cpg_go1_simulation', 'src'))
+# 作为后备，也尝试插入仓库顶层的 src 目录（若存在）
+sys.path.insert(0, os.path.join(SCRIPT_DIR, 'src'))
 
 from cpg_go1_simulation.stein.foot_trajectory_cpg import FootTrajectoryCPG
 
@@ -187,7 +191,7 @@ def main():
     @schedule(interval=dt)
     def loop():
         nonlocal t
-        t += 0.5*dt
+        t += 0.1*dt
 
         # 更新 body 期望（简单前进或保持不动）
         body_pos = np.array([0.0 + step_length * (t / duration), 0.0, body_height])
@@ -195,6 +199,8 @@ def main():
 
         # 为每个足端取 CPG 输出并设置为对应 leg 的目标
         support_polygon =  []
+        swim_foot = cpg.get_all_foot_phases(t)
+        # print(f'time: {t:.2f}, foot phases: {swim_foot["LF"]["readyswim"]}, {swim_foot["RF"]["readyswim"]}, {swim_foot["LH"]["readyswim"]}, {swim_foot["RH"]["readyswim"]}')
         for foot in cpg.foot_names:
             # CPG 生成的足端位置（相对于机体中心）
 
@@ -206,7 +212,7 @@ def main():
             
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
-                if foot_swim_pos[foot][2] > -0.05:
+                if swim_foot[foot]['is_stance'] == False:
                     leg_swim_tasks[foot].target = foot_swim_pos[foot]
                     leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"
@@ -222,6 +228,8 @@ def main():
                     leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"
                            , 0)
+
+                if swim_foot[foot]['readyswim'] == True:
                     support_polygon.append(foot_pos[foot][:2])
 
                 # 可视化目标点

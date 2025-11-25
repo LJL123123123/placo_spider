@@ -142,6 +142,7 @@ def main():
     
     try:
         from mujoco_sim import MuJoCoSim
+        import csv, os
         sim_helper = MuJoCoSim('/home/placo_cpg/spider_sldasm/urdf/scene.xml')
         use_mujoco = bool(getattr(sim_helper, 'available', False))
         if not use_mujoco:
@@ -263,6 +264,26 @@ def main():
         # print( f"q: {q}" )
         # print( f"dq: {qd}" )
         # print( f"ddq: {qdd}" )
+        _csv_path = '/home/placo_cpg/debug/data.csv'
+
+        # 初始化（仅第一次循环写入表头）
+        if not hasattr(loop, "_csv_initialized"):
+            os.makedirs(os.path.dirname(_csv_path), exist_ok=True)
+            with open(_csv_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['t', 'q0', 'q1', 'q2'])
+            loop._csv_initialized = True
+
+        # 准备要写入的行（确保 q 至少有 3 个元素）
+        q_arr = np.asarray(q).flatten()
+        if q_arr.size < 3:
+            q_arr = np.pad(q_arr, (0, 3 - q_arr.size), 'constant', constant_values=0.0)
+        row = [float(t), float(q_arr[0]), float(q_arr[1]), float(q_arr[2])]
+
+        # 追加到 CSV
+        with open(_csv_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(row)
 
         # 可视化机器人: 使用 MuJoCo 仿真替代原有 viz
         if use_mujoco and sim_helper is not None:
