@@ -54,9 +54,13 @@ except Exception as e:
     robot_viz = None
     point_viz = None
 
-# 将 src 路径加入 sys.path，以便导入本地 CPG 实现
-ROOT = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(os.path.join(ROOT, 'src'))
+# 将工作区内的本地 src 路径加入 sys.path，以便优先导入工作区代码而不是已安装的包
+# 之前的实现计算两级父目录导致添加了 `/home/src`，无法找到本地仓库的 src。
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# 优先插入本地 cpg_go1_simulation 的 src（常见仓库布局）
+sys.path.insert(0, os.path.join(SCRIPT_DIR, 'cpg_go1_simulation', 'src'))
+# 作为后备，也尝试插入仓库顶层的 src 目录（若存在）
+sys.path.insert(0, os.path.join(SCRIPT_DIR, 'src'))
 
 from cpg_go1_simulation.stein.foot_trajectory_cpg import FootTrajectoryCPG
 
@@ -67,20 +71,20 @@ def main():
     # CPG 配置
     total_time = 5.0
     toc = 2.5
-    dt = 0.02
-    step_length = 1.2
-    body_height = 0.19287
+    dt = 0.01
+    step_length = 0.6
+    body_height = 0.1
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
         before_ftype=1,
         after_ftype=1,
         total_time=total_time,
         toc=toc,
-        break_time=0.1,
-        step_height=0.05,
+        break_time=0.2,
+        step_height=0.1,
         step_length=step_length / 4,
         body_height=body_height,
-        foot_spacing=0.4
+        foot_spacing=0.3
     )
 
     # 创建机器人与求解器（尽量与 quadruped_targets-CoM-tra.py 保持一致）
@@ -89,6 +93,7 @@ def main():
         return
 
     robot = placo.RobotWrapper("/home/placo_cpg/spider_sldasm/urdf", placo.Flags.ignore_collisions)
+    robot.set_velocity_limits(1.)
     solver = placo.KinematicsSolver(robot)
 
     # 创建任务：四个足端和机身
@@ -126,9 +131,9 @@ def main():
                     np.array([0.371678, -0.372385]),
                     np.array([-0.361251, -0.360544])
                 ])
-    com = solver.add_com_polygon_constraint(polygon, 0.15)
+    com = solver.add_com_polygon_constraint(polygon, 0.05)
     com.polygon = polygon
-    com.configure("com_constraint", "soft", 1e-5)
+    com.configure("com_constraint", "soft", 1e0)
     # 可视化器
     viz = robot_viz(robot) if robot_viz is not None else None
     # --- set up MuJoCo simulation helper (mujoco_sim.py) ---
@@ -137,7 +142,7 @@ def main():
     
     try:
         from mujoco_sim import MuJoCoSim
-        sim_helper = MuJoCoSim('/home/placo_cpg/models/quadruped/scene.xml')
+        sim_helper = MuJoCoSim('/home/placo_cpg/spider_sldasm/urdf/scene.xml')
         use_mujoco = bool(getattr(sim_helper, 'available', False))
         if not use_mujoco:
             sim_helper = None
@@ -176,13 +181,15 @@ def main():
             "RH": np.array([0.0, 0.0, 0.0]),
         }
 
-    q_init = np.array([0, 0., 0.05, 0., 0., 0., 1.,
-                                    0.70191237, -0.51864883, 1.48555772,
-                                    0.70191237, -0.51864883, 1.48555772,
-                                    0.70191237, -0.51864883, 1.48555772,
-                                    0.70191237, -0.51864883, 1.48555772])
+    q_init = np.array([0, 0., body_height, 0., 0., 0., 1.,
+                                    0, 0, 0,
+                                    0, 0, 0,
+                                    0, 0, 0,
+                                    0, 0, 0])
     while(time.time() % 1 < 0.5):
         sim_helper.step_target(q_init, kp=1.25, kd=0.0025 * 1.25, steps=1)
+
+    robot.set_velocity_limits(1.)
 
     @schedule(interval=dt)
     def loop():
@@ -195,33 +202,40 @@ def main():
 
         # 为每个足端取 CPG 输出并设置为对应 leg 的目标
         support_polygon =  []
+        swim_foot = cpg.get_all_foot_phases(t)
+        # print(f'time: {t:.2f}, foot phases: {swim_foot["LF"]["readyswim"]}, {swim_foot["RF"]["readyswim"]}, {swim_foot["LH"]["readyswim"]}, {swim_foot["RH"]["readyswim"]}')
         for foot in cpg.foot_names:
             # CPG 生成的足端位置（相对于机体中心）
 
 
             # 将机体位置加到足端偏移，得到世界坐标目标（简化假设）
             foot_pos[foot] = robot.get_T_world_frame(leg_foot_name_map[foot])[:3, 3]
-            foot_pos[2] = 0.0
+            # foot_pos[2] = 0.0
             foot_swim_pos[foot] = cpg.generate_foot_position(foot, t) + np.array([0.0, 0.0, 0.35 - body_height])
+
             
             # 设置对应的 leg 任务目标
             if foot in leg_tasks:
-                if foot_swim_pos[foot][2] > -body_height:
+                if swim_foot[foot]['is_stance'] == False:
                     leg_swim_tasks[foot].target = foot_swim_pos[foot]
                     leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"
-                           , 1)
+                           , 1e5)
                     leg_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"
                            , 0)
                 else:
                     leg_tasks[foot].target_world = foot_pos[foot]
                     leg_tasks[foot].configure(leg_foot_name_map[foot]
-                           , "soft"
-                           , 1)
+                        #    , "soft"
+                        #    , 1e6
+                           ,"hard"
+                           )
                     leg_swim_tasks[foot].configure(leg_foot_name_map[foot]
                            , "soft"
                            , 0)
+
+                if swim_foot[foot]['readyswim'] == True:
                     support_polygon.append(foot_pos[foot][:2])
 
                 # 可视化目标点
@@ -269,7 +283,7 @@ def main():
                 q_target = qt
 
             # PD gains (tweak if robot is too aggressive)
-            KP = 0.6
+            KP = 1.2
             KD = 0.0025 * KP
 
             # compute number of physics steps per control step based on model timestep
@@ -292,22 +306,23 @@ def main():
             sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)           
             viz.display(robot.state.q)
 
-            # # 从 MuJoCo 获取关节 qpos，并替换 robot.state.q 的后 12 位
-            # q_current = np.asarray(robot.state.q).copy()
-            # qpos = np.asarray(sim_helper.get_qpos()).flatten()
-            # # 确保 q_current 至少有 7+12=19 个元素（base + 12 joints）
-            # if q_current.size < 19:
-            #     q_new = np.zeros(19)
-            #     q_new[:q_current.size] = q_current
-            #     q_current = q_new
-            # # 将 qpos 放到末尾 12 位（若 qpos 少于 12，则填充可用部分）
-            # if qpos.size >= 12:
-            #     q_current[-12:] = qpos[:12]
-            # else:
-            #     q_current[-qpos.size:] = qpos
-            # # print(f'q_current {q_current.size} elements, expected at least 19.')
-            # robot.state.q = q_current
-            # robot.update_kinematics()
+            # if t >=4.:
+            #     # 从 MuJoCo 获取关节 qpos，并替换 robot.state.q 的后 12 位
+            #     q_current = np.asarray(robot.state.q).copy()
+            #     qpos = np.asarray(sim_helper.get_qpos()).flatten()
+            #     # 确保 q_current 至少有 7+12=19 个元素（base + 12 joints）
+            #     if q_current.size < 19:
+            #         q_new = np.zeros(19)
+            #         q_new[:q_current.size] = q_current
+            #         q_current = q_new
+            #     # 将 qpos 放到末尾 12 位（若 qpos 少于 12，则填充可用部分）
+            #     if qpos.size >= 12:
+            #         q_current[-12:] = qpos[:12]
+            #     else:
+            #         q_current[-qpos.size:] = qpos
+            #     # print(f'q_current {q_current.size} elements, expected at least 19.')
+            #     robot.state.q = q_current
+            #     robot.update_kinematics()
 
         else:
             if viz is not None:
