@@ -73,14 +73,14 @@ def main():
     toc = 2.5
     dt = 0.01
     step_length = 0.6
-    body_height = 0.1
+    body_height = 0.2
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
         before_ftype=1,
         after_ftype=1,
         total_time=total_time,
         toc=toc,
-        break_time=0.2,
+        break_time=0.1,
         step_height=0.1,
         step_length=step_length / 4,
         body_height=body_height,
@@ -123,7 +123,7 @@ def main():
     body_init_task.configure("base_link", "soft", 1.0, 1e6)
     body_task.configure("base_link"
                     , "soft"                    
-                    , 1e2
+                    , 1e6
                     )
 
     polygon = np.array([
@@ -133,7 +133,7 @@ def main():
                 ])
     com = solver.add_com_polygon_constraint(polygon, 0.05)
     com.polygon = polygon
-    com.configure("com_constraint", "soft", 1e0)
+    com.configure("com_constraint", "soft", 1e3)
     # 可视化器
     viz = robot_viz(robot) if robot_viz is not None else None
     # --- set up MuJoCo simulation helper (mujoco_sim.py) ---
@@ -195,15 +195,33 @@ def main():
     @schedule(interval=dt)
     def loop():
         nonlocal t
-        t += 0.5*dt
-
+        t += 0.8*dt
+        swim_foot = cpg.get_all_foot_phases(t)
         # 更新 base_link 期望（简单前进或保持不动）
         body_pos = np.array([0.0 + step_length * (t / duration), 0.0, body_height])
-        body_task.target_world = body_pos
+        if swim_foot["LF"]["is_stance"] == True and swim_foot["RF"]["is_stance"] == True and swim_foot["LH"]["is_stance"] == True and swim_foot["RH"]["is_stance"] == True:
+            body_task.target_world = body_pos
+        # print(" body_task.target_world", body_task.target_world)
+        # print(f"{swim_foot['LF']['is_stance']}, {swim_foot['RF']['is_stance']}, {swim_foot['LH']['is_stance']}, {swim_foot['RH']['is_stance']}")
+
+        body_csv_path = '/home/placo_cpg/debug/body_data.csv'
+        # 初始化（仅第一次循环写入表头）
+        if not hasattr(loop, "body_csv_initialized"):
+            os.makedirs(os.path.dirname(body_csv_path), exist_ok=True)
+            with open(body_csv_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['t', 'body_x', 'body_y', 'body_z'])
+            loop.body_csv_initialized = True
+        body_arr = np.asarray(body_pos).flatten()
+        row = [float(t), float(body_arr[0]), float(body_arr[1]), float(body_arr[2])]
+        # 追加到 CSV
+        with open(body_csv_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(row)
 
         # 为每个足端取 CPG 输出并设置为对应 leg 的目标
         support_polygon =  []
-        swim_foot = cpg.get_all_foot_phases(t)
+        
         # print(f'time: {t:.2f}, foot phases: {swim_foot["LF"]["readyswim"]}, {swim_foot["RF"]["readyswim"]}, {swim_foot["LH"]["readyswim"]}, {swim_foot["RH"]["readyswim"]}')
         for foot in cpg.foot_names:
             # CPG 生成的足端位置（相对于机体中心）
@@ -250,7 +268,7 @@ def main():
         # print(f'LF : {foot_pos["LF"]}')
         for k in range(support_polygon.__len__()):
             line_from = support_polygon[k]
-            line_to = support_polygon[(k + 1) % 3]
+            line_to = support_polygon[(k + 1) % support_polygon.__len__()]
             line_viz(f"support_{k}", np.array([line_from, line_to]), color=0xFFAA00)
 
         # print(support_polygon.__len__())
@@ -264,24 +282,42 @@ def main():
         # print( f"q: {q}" )
         # print( f"dq: {qd}" )
         # print( f"ddq: {qdd}" )
-        _csv_path = '/home/placo_cpg/debug/data.csv'
+        robot_csv_path = '/home/placo_cpg/debug/robot_data.csv'
 
         # 初始化（仅第一次循环写入表头）
-        if not hasattr(loop, "_csv_initialized"):
-            os.makedirs(os.path.dirname(_csv_path), exist_ok=True)
-            with open(_csv_path, 'w', newline='') as f:
+        if not hasattr(loop, "robot_csv_initialized"):
+            os.makedirs(os.path.dirname(robot_csv_path), exist_ok=True)
+            with open(robot_csv_path, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['t', 'q0', 'q1', 'q2'])
-            loop._csv_initialized = True
+                writer.writerow(['t', 'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q17', 'q18'])
+            loop.robot_csv_initialized = True
 
-        # 准备要写入的行（确保 q 至少有 3 个元素）
+        # 准备要写入的行（确保 q 至少有 19 个元素）
         q_arr = np.asarray(q).flatten()
-        if q_arr.size < 3:
-            q_arr = np.pad(q_arr, (0, 3 - q_arr.size), 'constant', constant_values=0.0)
-        row = [float(t), float(q_arr[0]), float(q_arr[1]), float(q_arr[2])]
+        if q_arr.size < 19:
+            q_arr = np.pad(q_arr, (0, 19 - q_arr.size), 'constant', constant_values=0.0)
+        row = [float(t), float(q_arr[0]), float(q_arr[1]), float(q_arr[2]) , float(q_arr[3]), float(q_arr[4]), float(q_arr[5]), float(q_arr[6]),
+               float(q_arr[7]), float(q_arr[8]), float(q_arr[9]), float(q_arr[10]), float(q_arr[11]), float(q_arr[12]), float(q_arr[13]),
+               float(q_arr[14]), float(q_arr[15]), float(q_arr[16]), float(q_arr[17]), float(q_arr[18])]
 
         # 追加到 CSV
-        with open(_csv_path, 'a', newline='') as f:
+        with open(robot_csv_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(row)
+
+        error_csv_path = '/home/placo_cpg/debug/error_data.csv'
+        # 初始化（仅第一次循环写入表头）
+        if not hasattr(loop, "error_csv_initialized"):
+            os.makedirs(os.path.dirname(error_csv_path), exist_ok=True)
+            with open(error_csv_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['t', 'body_x_error', 'body_y_error', 'body_z_error'])
+            loop.error_csv_initialized = True
+        error = body_pos - q[:3]
+        error_arr = np.asarray(error).flatten()
+        row = [float(t), float(error_arr[0]), float(error_arr[1]), float(error_arr[2])]
+        # 追加到 CSV
+        with open(error_csv_path, 'a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(row)
 
