@@ -28,6 +28,8 @@ import tty
 import select
 import atexit
 
+import csv
+
 import sys
 import os
 import numpy as np
@@ -142,7 +144,8 @@ def main():
     
     try:
         from mujoco_sim import MuJoCoSim
-        import csv, os
+        # csv is imported at module scope; avoid importing os here to prevent
+        # shadowing the module-level `os` name which is used in nested functions.
         sim_helper = MuJoCoSim('/home/placo_cpg/spider_sldasm/urdf/scene.xml')
         use_mujoco = bool(getattr(sim_helper, 'available', False))
         if not use_mujoco:
@@ -361,25 +364,35 @@ def main():
             # print debug info immediately (avoid buffering when viewer/server runs)
             # print(f'q_target ={q_target}, timestep={timestep}, steps per control={steps}', flush=True)
             sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)           
-            viz.display(robot.state.q)
+            # 采样 IMU 并将数据传入 CPG（如果可用）
+            try:
+                imu = None
+                if hasattr(sim_helper, 'sample_imu'):
+                    imu = sim_helper.sample_imu()
+                    # print(f'IMU data: {imu}', flush=True)
+                if imu is not None and hasattr(cpg, 'set_imu_feedback'):
+                    # FootTrajectoryCPG.set_imu_feedback(pitch, roll, accel=None, alpha=None)
+                    try:
+                        cpg.set_imu_feedback(float(imu.get('pitch', 0.0)), float(imu.get('roll', 0.0)), accel=np.asarray(imu.get('accel')) if imu.get('accel') is not None else None, alpha=getattr(cpg, 'imu_filter_alpha', None))
+                    except Exception:
+                        print('Warning: CPG set_imu_feedback failed', flush=True)
+                        # 若调用失败，不影响仿真循环
+                        pass
+                    try:
+                        None
+                        # robot.state.q[3] = float(imu.get('x', 0.0))
+                        # robot.state.q[4] = float(imu.get('y', 0.0))
+                        # robot.state.q[5] = float(imu.get('z', 0.0))
+                        # robot.state.q[6] = float(imu.get('w', 0.0))
+                    except Exception:
+                        print('Warning: updating robot.state.q orientation from IMU failed', flush=True)
+                        pass
 
-            # if t >=4.:
-            #     # 从 MuJoCo 获取关节 qpos，并替换 robot.state.q 的后 12 位
-            #     q_current = np.asarray(robot.state.q).copy()
-            #     qpos = np.asarray(sim_helper.get_qpos()).flatten()
-            #     # 确保 q_current 至少有 7+12=19 个元素（base + 12 joints）
-            #     if q_current.size < 19:
-            #         q_new = np.zeros(19)
-            #         q_new[:q_current.size] = q_current
-            #         q_current = q_new
-            #     # 将 qpos 放到末尾 12 位（若 qpos 少于 12，则填充可用部分）
-            #     if qpos.size >= 12:
-            #         q_current[-12:] = qpos[:12]
-            #     else:
-            #         q_current[-qpos.size:] = qpos
-            #     # print(f'q_current {q_current.size} elements, expected at least 19.')
-            #     robot.state.q = q_current
-            #     robot.update_kinematics()
+            except Exception:
+                # 保护性捕获，避免 IMU 引发循环中断
+                pass
+
+            viz.display(robot.state.q)
 
         else:
             if viz is not None:
