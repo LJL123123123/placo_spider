@@ -327,17 +327,29 @@ def main():
         
         # Send desired state and PD gains to MuJoCo via shared memory
         # Define PD gains (tune these for your robot)
-        kp_gains = np.ones(12) * 100.0  # Proportional gain for each actuator
-        kd_gains = np.ones(12) * 10.0   # Derivative gain for each actuator
-        
+        KP_HIP = 1.0
+        KP_ANKLE = 0.8
+        KP_KNEE = 0.8
+        KD_HIP = 0.01
+        KD_ANKLE = .001
+        KD_KNEE = .001
+        kp_gains = [KP_HIP, KP_ANKLE, KP_KNEE
+                    ,KP_HIP, KP_ANKLE, KP_KNEE
+                    ,KP_HIP, KP_ANKLE, KP_KNEE
+                    ,KP_HIP, KP_ANKLE, KP_KNEE]  # Proportional gain for each actuator
+        kd_gains = [KD_HIP, KD_ANKLE, KD_KNEE
+                    ,KD_HIP, KD_ANKLE, KD_KNEE
+                    ,KD_HIP, KD_ANKLE, KD_KNEE
+                    ,KD_HIP, KD_ANKLE, KD_KNEE]   # Derivative gain for each actuator
+
         try:
             cpg_to_sim.write(q, kp_gains, kd_gains)
         except Exception as e:
             print(f"Warning: Failed to write to shared memory: {e}", flush=True)
         
         # Print status every 1 second (100 iterations at 100Hz)
-        if int(t / dt) % 100 == 0:
-            print(f'CPG t={t:.2f}s, body_pos=[{q[0]:.3f}, {q[1]:.3f}, {q[2]:.3f}], sim_z={sim_qpos[2]:.3f}', flush=True)
+        # if int(t / dt) % 100 == 0:
+        #     print(f'CPG t={t:.2f}s, body_pos=[{q[0]:.3f}, {q[1]:.3f}, {q[2]:.3f}], sim_z={sim_qpos[2]:.3f}', flush=True)
         
         # Optional: Log to CSV
         robot_csv_path = '/home/placo_cpg/debug/robot_data.csv'

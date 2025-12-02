@@ -39,6 +39,7 @@ print("MuJoCo Sim: Shared memory initialized", flush=True)
 mujoco.mj_forward(model, data)  # compute forward kinematics to get initial state
 initial_qpos = data.qpos.copy()
 print(f"Initial qpos: {initial_qpos}", flush=True)
+print(f"Model has {model.nu} joints,{model.nv} motors", flush=True)
 
 # implement actuator-bias callback: fill per-actuator bias from joint-level qfrc_bias
 def _py_actuator_bias(m, d, act_bias):
@@ -164,7 +165,6 @@ while True:
     # Get actuator->dof mapping (built by callback on first iteration)
     mid = id(model)
     act_map = _MODEL_ACT_TO_DOF.get(mid, [])
-    
     # Build mapping if not yet available (first iteration)
     if not act_map:
         # Trigger the callback to build the mapping
@@ -178,12 +178,11 @@ while True:
         dof = act_map[a] if a < len(act_map) else -1
         # Only control actuated joints (dof >= 6), not the free joint (dof 0-5)
         if dof is not None and 6 <= dof < model.nv:
-            q_err = qpos_desired[dof] - data.qpos[dof]
+            q_err = qpos_desired[dof+1] - data.qpos[dof+1]
             qd = data.qvel[dof]
             data.ctrl[a] = kp[a] * q_err - kd[a] * qd
         else:
             data.ctrl[a] = 0.0
-
     # Write current state to shared memory for CPG to read
     try:
         sim_to_cpg.write(data.qpos, data.ctrl)
@@ -207,9 +206,7 @@ while True:
     viewer.render()
     if not viewer.is_alive:
         break
-    # Print status every 100 steps (0.2 seconds at 500Hz)
-    if int(data.time / dt) % 100 == 0:
-        print(f't={data.time:.2f}s, qpos[2]={data.qpos[2]:.4f}, ctrl_rms={np.sqrt(np.mean(data.ctrl**2)):.2f}', flush=True)
+
     next_time += dt
 
 # close

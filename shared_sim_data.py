@@ -146,8 +146,8 @@ class CPGToSimData:
         if create:
             self.data[:] = 0.0
             # Default gains
-            self.data[QPOS_SIZE:QPOS_SIZE+KP_SIZE] = 100.0  # default kp
-            self.data[QPOS_SIZE+KP_SIZE:QPOS_SIZE+KP_SIZE+KD_SIZE] = 10.0  # default kd
+            self.data[QPOS_SIZE:QPOS_SIZE+KP_SIZE] = 0.0  # default kp
+            self.data[QPOS_SIZE+KP_SIZE:QPOS_SIZE+KP_SIZE+KD_SIZE] = 0.0  # default kd
     
     def write(self, qpos_desired, kp, kd):
         """Write desired qpos and PD gains to shared memory"""
