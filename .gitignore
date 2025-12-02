@@ -4,5 +4,8 @@ deploy_mujoco_onnx.py
 __pycache__
 configs/
 * copy*
-demo *
+demo*
 debug/
+*log*
+*LOG*
+*test*
