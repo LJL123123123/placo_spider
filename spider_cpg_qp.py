@@ -42,6 +42,32 @@ import time
 # Import shared memory data structures
 from shared_sim_data import SimToCPGData, CPGToSimData, cleanup_shared_memory
 
+def quat_to_euler(quat):
+    """
+    四元数转换为欧拉角 (roll, pitch, yaw)
+    Args:
+        quat: 四元数 (x, y, z, w)
+    Returns:
+        roll, pitch, yaw: 欧拉角 (弧度)
+    """
+    x, y, z, w = quat
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll_x = math.atan2(t0, t1)
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch_y = math.asin(t2)
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw_z = math.atan2(t3, t4)
+
+    euler = (roll_x, pitch_y, yaw_z)
+
+    return euler
+
 try:
     from ischedule  import schedule, run_loop
 except Exception:
@@ -95,9 +121,9 @@ def main():
         print("ERROR: MuJoCo sim not found. Start mujoco_sim.py first!", flush=True)
         return
     
-    # Register cleanup on exit
-    atexit.register(lambda: sim_to_cpg.close())
-    atexit.register(lambda: cpg_to_sim.close())
+    # # Register cleanup on exit
+    # atexit.register(lambda: sim_to_cpg.close())
+    # atexit.register(lambda: cpg_to_sim.close())
     
     print("CPG Planner: Shared memory connected", flush=True)
     
@@ -105,7 +131,7 @@ def main():
     total_time = 5.0
     toc = 2.5
     dt = 0.01  # 100Hz for CPG planner
-    step_length = 0.6
+    step_length = 0.8
     body_height = 0.2
     # 创建 walk 类型的 FootTrajectoryCPG，开启一个小的 break_time
     cpg = FootTrajectoryCPG(
@@ -114,7 +140,7 @@ def main():
         total_time=total_time,
         toc=toc,
         break_time=0.1,
-        step_height=0.1,
+        step_height=0.2,
         step_length=step_length / 4,
         body_height=body_height,
         foot_spacing=0.3
@@ -164,7 +190,7 @@ def main():
                     np.array([0.371678, -0.372385]),
                     np.array([-0.361251, -0.360544])
                 ])
-    com = solver.add_com_polygon_constraint(polygon, 0.05)
+    com = solver.add_com_polygon_constraint(polygon, 0.5)
     com.polygon = polygon
     com.configure("com_constraint", "soft", 1e3)
     # 可视化器
@@ -172,28 +198,6 @@ def main():
     # --- set up MuJoCo simulation helper (mujoco_sim.py) ---
     use_mujoco = False
     sim_helper = None
-    
-    # try:
-    #     from mujoco_sim import MuJoCoSim
-    #     # csv is imported at module scope; avoid importing os here to prevent
-    #     # shadowing the module-level `os` name which is used in nested functions.
-    #     sim_helper = MuJoCoSim('/home/placo_cpg/spider_sldasm/urdf/scene.xml')
-    #     use_mujoco = bool(getattr(sim_helper, 'available', False))
-    #     if not use_mujoco:
-    #         sim_helper = None
-    #     else:
-    #         # print actuator -> joint mapping to help verify motor ordering
-    #         print('Actuator mapping (actuator_index -> (qposadr, dofadr, joint_name)):', flush=True)
-    #         for i, m in enumerate(sim_helper.act_map):
-    #             print(f'  {i}: {m}', flush=True)
-    #         # start viewer explicitly (do not auto-launch on import)
-    #         try:
-    #             started = sim_helper.start_viewer()
-    #             print(f'sim_helper.start_viewer() -> {started}', flush=True)
-    #         except Exception as e:
-    #             print('sim_helper.start_viewer() raised:', e, flush=True)
-    # except Exception as e:
-    #     print('MuJoCo helper unavailable, falling back to previous viz (if any):', e)
 
     # 运行仿真循环：将 CPG 输出的足端位置作为任务目标
     t = 0.0
@@ -229,7 +233,7 @@ def main():
     @schedule(interval=dt)
     def loop():
         nonlocal t
-        t += 0.8*dt
+        t += 1.0*dt
         
         # Read current simulation state from shared memory
         try:
@@ -324,15 +328,18 @@ def main():
         q = robot.state.q
         qd = robot.state.qd
         qdd = robot.state.qdd
-        
+#         q = [0. ,  0. ,  0.19287 , 1.,  0. ,   0.  ,   0.  ,    0.   ,   0.,
+#  0.  ,    0.   ,   0.   ,   0.   ,   0.   ,   0.     , 0.   ,   0.  ,    0.,
+#  0.     ]
+
         # Send desired state and PD gains to MuJoCo via shared memory
         # Define PD gains (tune these for your robot)
-        KP_HIP = 1.0
-        KP_ANKLE = 0.8
-        KP_KNEE = 0.8
-        KD_HIP = 0.01
-        KD_ANKLE = .001
-        KD_KNEE = .001
+        KP_HIP = 100.
+        KP_ANKLE = 0.5 * KP_HIP
+        KP_KNEE = 0.8 * KP_HIP
+        KD_HIP = 0.1 * math.sqrt(KP_HIP)
+        KD_ANKLE = 0.1 * KP_ANKLE
+        KD_KNEE = 0.1 * KP_KNEE
         kp_gains = [KP_HIP, KP_ANKLE, KP_KNEE
                     ,KP_HIP, KP_ANKLE, KP_KNEE
                     ,KP_HIP, KP_ANKLE, KP_KNEE
@@ -391,73 +398,39 @@ def main():
             writer = csv.writer(f)
             writer.writerow(row)
 
-        # 可视化机器人: 使用 MuJoCo 仿真替代原有 viz
-        # if use_mujoco and sim_helper is not None:
-        #     # target state q: try to use robot.state.q, otherwise fallback to example vector
-        #     try:
-        #         q_target = np.asarray(robot.state.q)
-                
-        #     except Exception:
-        #         q_target = np.array([0.02879997, 0., 0.05, 0., 0., 0., 1.,
-        #                              0.70191237, -0.51864883, 1.48555772,
-        #                              0.97934966, -0.70745988, 2.24408594,
-        #                              1.06774713, -0.62819484, 1.96654732,
-        #                              1.25845303, -0.43142328, 1.48984719])
-        #     # Ensure q_target has 7 (base) + 12 (joints) = 19 elements
-        #     if q_target.size < 19:
-        #         qt = np.zeros(19)
-        #         qt[:min(q_target.size, 19)] = q_target[:min(q_target.size, 19)]
-        #         q_target = qt
-
-        #     # PD gains (tweak if robot is too aggressive)
-        #     KP = 1.2
-        #     KD = 0.0025 * KP
-
-        #     # compute number of physics steps per control step based on model timestep
-        #     try:
-        #         if getattr(sim_helper, '_use_new', False):
-        #             timestep = float(sim_helper.model.opt.timestep)
-        #         else:
-        #             timestep = float(sim_helper.sim.model.opt.timestep)
-        #     except Exception:
-        #         timestep = 0.01
-        #     steps = max(1, int(round(dt / timestep)))
-
-        #     # q_target = np.array([0, 0., 0.05, 0., 0., 0., 1.,
-        #     #                          0.70191237, -0.51864883, 1.48555772,
-        #     #                          0.70191237, -0.51864883, 1.48555772,
-        #     #                          0.70191237, -0.51864883, 1.48555772,
-        #     #                          0.70191237, -0.51864883, 1.48555772])
-        #     # print debug info immediately (avoid buffering when viewer/server runs)
-        #     # print(f'q_target ={q_target}, timestep={timestep}, steps per control={steps}', flush=True)
-        #     sim_helper.step_target(q_target, kp=KP, kd=KD, steps=steps)           
         #     # 采样 IMU 并将数据传入 CPG（如果可用）
-        #     try:
-        #         imu = None
-        #         if hasattr(sim_helper, 'sample_imu'):
-        #             imu = sim_helper.sample_imu()
-        #             # print(f'IMU data: {imu}', flush=True)
-        #         if imu is not None and hasattr(cpg, 'set_imu_feedback'):
-        #             # FootTrajectoryCPG.set_imu_feedback(pitch, roll, accel=None, alpha=None)
-        #             try:
-        #                 cpg.set_imu_feedback(float(imu.get('pitch', 0.0)), float(imu.get('roll', 0.0)), accel=np.asarray(imu.get('accel')) if imu.get('accel') is not None else None, alpha=getattr(cpg, 'imu_filter_alpha', None))
-        #             except Exception:
-        #                 print('Warning: CPG set_imu_feedback failed', flush=True)
-        #                 # 若调用失败，不影响仿真循环
-        #                 pass
-        #             try:
-        #                 None
-        #                 # robot.state.q[3] = float(imu.get('x', 0.0))
-        #                 # robot.state.q[4] = float(imu.get('y', 0.0))
-        #                 # robot.state.q[5] = float(imu.get('z', 0.0))
-        #                 # robot.state.q[6] = float(imu.get('w', 0.0))
-        #             except Exception:
-        #                 print('Warning: updating robot.state.q orientation from IMU failed', flush=True)
-        #                 pass
+            try:
+                imu = None
+                
+                imu_quat = sim_qpos[3:7]
+                # print(f'IMU data: {imu_quat}', flush=True)
+                imu_euler = None
+                if imu_quat is not None:
+                    imu_euler = quat_to_euler(imu_quat)
+                # print(f'IMU Euler angles: {imu_euler}', flush=True)
+                # print(f'IMU data: {imu}', flush=True)
+                if imu_euler is not None and hasattr(cpg, 'set_imu_feedback'):
+                    # FootTrajectoryCPG.set_imu_feedback(pitch, roll, accel=None, alpha=None)
+                    try:
+                        None
+                        # cpg.set_imu_feedback(float(imu_euler[1]), float(imu_euler[0]))
+                    except Exception:
+                        print('Warning: CPG set_imu_feedback failed', flush=True)
+                        # 若调用失败，不影响仿真循环
+                        pass
+                    try:
+                        None
+                        # robot.state.q[3] = float(imu_quat[0])
+                        # robot.state.q[4] = float(imu_quat[1])
+                        # robot.state.q[5] = float(imu_quat[2])
+                        # robot.state.q[6] = float(imu_quat[3])
+                    except Exception:
+                        print('Warning: updating robot.state.q orientation from IMU failed', flush=True)
+                        pass
 
-        #     except Exception:
-        #         # 保护性捕获，避免 IMU 引发循环中断
-        #         pass
+            except Exception:
+                # 保护性捕获，避免 IMU 引发循环中断
+                pass
 
         viz.display(robot.state.q)
 
@@ -475,19 +448,7 @@ def main():
     try:
         run_loop()
     except KeyboardInterrupt:
-        # allow graceful shutdown of viewer/server started by mujoco
-        print("Simulation interrupted by user", flush=True)
-        try:
-            if sim_helper is not None and getattr(sim_helper, 'viewer', None) is not None:
-                try:
-                    sim_helper.viewer.close()
-                except Exception:
-                    try:
-                        sim_helper.viewer.finish()
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+        None
         return
     except Exception:
         # 如果 ischedule 不可用，手动运行简化循环
