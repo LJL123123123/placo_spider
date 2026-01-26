@@ -22,13 +22,15 @@ Expected target_ori['com']: (3,3) rotation matrix
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 import time
 import numpy as np
 
 PAIR1 = ['LF', 'RH']
 PAIR2 = ['RF', 'LH']
 ALL_LEGS = ['LF', 'RF', 'LH', 'RH']
+
+GaitMode = Literal["trot", "quasi_static"]
 
 
 @dataclass
@@ -40,12 +42,27 @@ class GaitParams:
     cmd_timeout: float = 2.0
     stand_transition_duration: float = 0.4
 
+    # Gait mode selection
+    gait_mode: GaitMode = "trot"
+
+    # Quasi-static (crawl) parameters
+    # A full crawl cycle is split into 4 equal phases; in each phase
+    # only one leg is swinging (3 legs in stance).
+    qs_cycle_period: float = 1.0
+    # Swing duty inside each single-leg phase. Must be in (0,1).
+    # Example: 0.5 means first half of the phase is swing, second half is stance.
+    qs_swing_duty: float = 0.6
+    # Swing order for crawl gait (typical: LF -> RH -> RF -> LH)
+    qs_order: tuple = ("LF", "RF", "RH", "LH")
+
 
 @dataclass
 class GaitPlan:
     in_cycle: bool
     stance_legs: List[str]
     swing_legs: List[str]
+    # Contact state in world (True = in contact/stance, False = swing)
+    contact_state: Dict[str, bool]
     target_pos: Dict[str, np.ndarray]
     target_ori: Dict[str, np.ndarray]
 
@@ -101,6 +118,22 @@ class GaitCycleManager:
         # Track previous half-cycle to make phase boundary handling explicit.
         # This is critical for world-fixed stance + continuous touchdown.
         self._prev_first_half = None  # type: Optional[bool]
+
+        # Quasi-static phase tracking (for explicit boundary handling)
+        self._prev_qs_swing_leg: Optional[str] = None
+
+    def set_gait_mode(self, mode: GaitMode):
+        """Set gait mode: 'trot' or 'quasi_static'.
+
+        This does not immediately force a reset, but by default we reset phase
+        bookkeeping to avoid half-cycle artifacts when switching.
+        """
+        if mode not in ("trot", "quasi_static"):
+            raise ValueError(f"Unsupported gait mode: {mode}")
+        self.params.gait_mode = mode
+        # Reset phase boundary trackers
+        self._prev_first_half = None
+        self._prev_qs_swing_leg = None
 
     def set_stand_targets(self, target_pos: Dict[str, np.ndarray], target_ori: Dict[str, np.ndarray]):
         self._stand_pos = {k: np.asarray(v, dtype=self.dtype).copy() for k, v in target_pos.items()}
@@ -277,6 +310,7 @@ class GaitCycleManager:
                 in_cycle=self.in_cycle,
                 stance_legs=ALL_LEGS,
                 swing_legs=[],
+                contact_state={k: True for k in ALL_LEGS},
                 target_pos=new_pos,
                 target_ori=new_ori,
             )
@@ -289,6 +323,7 @@ class GaitCycleManager:
                     in_cycle=self.in_cycle,
                     stance_legs=ALL_LEGS,
                     swing_legs=[],
+                    contact_state={k: True for k in ALL_LEGS},
                     target_pos={k: np.asarray(v, dtype=self.dtype).copy() for k, v in target_pos.items()},
                     target_ori={k: np.asarray(v, dtype=self.dtype).copy() for k, v in target_ori.items()},
                 )
@@ -382,11 +417,12 @@ class GaitCycleManager:
                 in_cycle=self.in_cycle,
                 stance_legs=ALL_LEGS,
                 swing_legs=[],
+                contact_state={k: True for k in ALL_LEGS},
                 target_pos=new_pos,
                 target_ori=new_ori,
             )
 
-        # active command & in cycle: integrate COM, yaw, and trot feet
+    # active command & in cycle: integrate COM, yaw, and gait feet
         # integrate COM in world: v_world = R_com @ v_body
         # integrate COM in world: v_world = R_meas @ v_body
         # Using measured orientation avoids drift/lag when yaw is controlled by the robot.
@@ -437,7 +473,82 @@ class GaitCycleManager:
             # Use NEW planned com_next and yaw for upcoming landing placement
             return com_next[0:2] + (Rz2 @ off)
 
-        # gait phase
+        mode = getattr(self.params, "gait_mode", "trot")
+        if mode == "quasi_static":
+            # --- Quasi-static crawl gait (single-leg swing) ---
+            T = float(getattr(self.params, "qs_cycle_period", max(self.params.cycle_period, 2.0)))
+            duty = float(getattr(self.params, "qs_swing_duty", 0.6))
+            duty = float(np.clip(duty, 1e-3, 1.0 - 1e-3))
+            order = list(getattr(self.params, "qs_order", ("LF", "RH", "RF", "LH")))
+            if len(order) != 4 or any(l not in ALL_LEGS for l in order):
+                order = ["LF", "RH", "RF", "LH"]
+
+            phase = ((t - self._t0) % T) / T  # [0,1)
+            phase4 = phase * 4.0
+            idx = int(np.floor(phase4)) % 4
+            u = float(phase4 - np.floor(phase4))  # [0,1) within this leg phase
+            swing_leg = str(order[idx])
+
+            # inside the leg phase: first 'duty' part is swing, remainder is stance
+            swing_active = (u < duty)
+            s_phase = (u / duty) if swing_active else 1.0
+            s_phase = max(0.0, min(1.0, float(s_phase)))
+
+            swing_legs = [swing_leg] if swing_active else []
+            stance_legs = [l for l in ALL_LEGS if l not in swing_legs]
+
+            # Boundary handling: if previous phase's swing leg changed, force touchdown
+            # for the previous swing leg to avoid snapping back to old _feet_world.
+            if self._prev_qs_swing_leg is not None and swing_leg != self._prev_qs_swing_leg:
+                prev = self._prev_qs_swing_leg
+                pf_prev = self._swing_goal[prev].copy() if prev in self._swing_goal else self._feet_world[prev].copy()
+                self._feet_world[prev] = pf_prev.copy()
+                new_pos[prev] = pf_prev.copy()
+                self._swing_active[prev] = False
+                self._swing_start[prev] = pf_prev.copy()
+                self._swing_goal[prev] = pf_prev.copy()
+
+            self._prev_qs_swing_leg = swing_leg
+
+            # Quasi-static step placement: smaller lookahead (more conservative)
+            mid_time = 0.5 * (T / 4.0)  # half of a single-leg phase
+            delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
+
+            # Stance legs: world-fixed
+            for leg in stance_legs:
+                self._swing_active[leg] = False
+                new_pos[leg] = self._feet_world[leg].copy()
+
+            # Swing leg: if active, generate swing trajectory; otherwise keep world-fixed
+            if swing_active:
+                if not self._swing_active[swing_leg]:
+                    self._swing_active[swing_leg] = True
+                    self._swing_start[swing_leg] = self._feet_world[swing_leg].copy()
+
+                p0 = self._swing_start[swing_leg]
+                pf = p0.copy()
+                pf[0:2] = com_relative_xy_for_leg(swing_leg) + delta_xy
+                pf[2] = float(self._stand_pos[swing_leg][2]) if (self._stand_pos is not None and swing_leg in self._stand_pos) else 0.0
+                self._swing_goal[swing_leg] = pf
+
+                new_pos[swing_leg] = self._swing_traj(p0, pf, s_phase)
+                if s_phase >= 1.0 - 1e-6:
+                    self._feet_world[swing_leg] = pf.copy()
+                    self._swing_active[swing_leg] = False
+            else:
+                new_pos[swing_leg] = self._feet_world[swing_leg].copy()
+
+            contact_state = {leg: (leg in stance_legs) for leg in ALL_LEGS}
+            return GaitPlan(
+                in_cycle=self.in_cycle,
+                stance_legs=stance_legs,
+                swing_legs=swing_legs,
+                contact_state=contact_state,
+                target_pos=new_pos,
+                target_ori=new_ori,
+            )
+
+        # --- Default: trot gait (two-leg swing) ---
         phase = ((t - self._t0) % self.params.cycle_period) / self.params.cycle_period
         first_half = phase < 0.5
         swing_legs = PAIR1 if first_half else PAIR2
@@ -445,10 +556,7 @@ class GaitCycleManager:
         s_phase = (phase / 0.5) if first_half else ((phase - 0.5) / 0.5)
         s_phase = max(0.0, min(1.0, float(s_phase)))
 
-        # Detect half-cycle switch. At the exact boundary, the previous swing legs
-        # must be forced to touchdown (world contact point becomes their swing_goal).
-        # Otherwise, stance logic will immediately snap the foot back to the previous
-        # _feet_world and create a jump.
+        # Detect half-cycle switch and force touchdown for previous swing legs
         half_changed = (self._prev_first_half is not None) and (first_half != self._prev_first_half)
         if half_changed:
             prev_swing = PAIR1 if self._prev_first_half else PAIR2
@@ -460,33 +568,25 @@ class GaitCycleManager:
                 self._swing_start[leg] = pf.copy()
                 self._swing_goal[leg] = pf.copy()
 
-            # Also ensure the other pair (new stance legs) uses world-fixed feet.
             prev_stance = [l for l in ALL_LEGS if l not in prev_swing]
             for leg in prev_stance:
                 new_pos[leg] = self._feet_world[leg].copy()
 
         self._prev_first_half = first_half
-        # Update swing start (lift-off) and continuously update swing landing goals.
-        # This mirrors gait_manager_batch's idea: swing feet should track the planned
-        # COM + yaw evolution (avoids visible lag when executing yaw rotations).
-        #
-        # For a trot with ~50% duty factor, a common kinematic choice is to place the
-        # foot ahead by v_world * (T * duty / 2) ~= v_world * (T/4).
+        self._prev_qs_swing_leg = None
+
         mid_time = 0.25 * float(self.params.cycle_period)
         delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
 
-        # Lift-off: start swing from last touchdown (world contact) point.
         for leg in swing_legs:
             if not self._swing_active[leg]:
                 self._swing_active[leg] = True
                 self._swing_start[leg] = self._feet_world[leg].copy()
 
-        # Stance legs: keep world position fixed.
         for leg in stance_legs:
             self._swing_active[leg] = False
             new_pos[leg] = self._feet_world[leg].copy()
 
-        # Swing legs: continuously update landing goal using current planned yaw/COM.
         for leg in swing_legs:
             p0 = self._swing_start[leg]
             pf = p0.copy()
@@ -499,14 +599,12 @@ class GaitCycleManager:
                 self._feet_world[leg] = pf.copy()
                 self._swing_active[leg] = False
 
-        # NOTE: feet_world represents the world contact point (last touchdown).
-        # We update it only when a swing finishes (touchdown), not continuously
-        # during stance.
-
+        contact_state = {leg: (leg in stance_legs) for leg in ALL_LEGS}
         return GaitPlan(
             in_cycle=self.in_cycle,
             stance_legs=stance_legs,
             swing_legs=swing_legs,
+            contact_state=contact_state,
             target_pos=new_pos,
             target_ori=new_ori,
         )

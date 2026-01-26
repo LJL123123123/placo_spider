@@ -6,6 +6,6 @@ configs/
 * copy*
 demo*
 debug/
-*log*
+*log
 *LOG*
 *test*
