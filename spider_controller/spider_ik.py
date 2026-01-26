@@ -60,19 +60,20 @@ class SpiderIkConfig:
     enable_logger: bool = True
 
     # gait params
-    cycle_period: float = 1.0
-    swing_height: float = 0.08
+    cycle_period: float = 0.5
+    swing_height: float = 0.12
     lookahead: float = 1.0
     cmd_epsilon: float = 1e-4
     cmd_timeout: float = 2.0
     stand_transition_duration: float = 0.1
 
     # com polygon constraint
-    polygon_margin: float = 0.1
+    polygon_margin: float = 1.5
 
     # solver weights
     leg_task_weight: float = 1e3
     body_task_weight: float = 1e2
+    com_constraint_weight: float = 1e1
 
     # URDF root candidates
     urdf_candidates: Tuple[str, ...] = ("/home/placo_cpg/spider_sldasm/urdf",)
@@ -116,8 +117,12 @@ class SpiderIK:
             raise FileNotFoundError(f"URDF root not found in candidates: {self.cfg.urdf_candidates}")
 
         self.robot = self.placo.RobotWrapper(self.urdf_root, self.placo.Flags.ignore_collisions)
-        self.robot.set_velocity_limits(1.0)
+        self.robot.set_velocity_limits(0.005)
+        self.robot.model.velocityLimit[0] = 0.005  # ensure all joints have limits
+        self.robot.model.velocityLimit[1] = 0.005  # ensure all joints have limits
+        self.robot.model.velocityLimit[2] = 0.005  # ensure all joints have limits
         self.solver = self.placo.KinematicsSolver(self.robot)
+        self.solver.dt = 0.001
 
         # frames mapping
         self.leg_foot_name_map = {
@@ -154,7 +159,7 @@ class SpiderIK:
         ])
         self.com_constraint = self.solver.add_com_polygon_constraint(init_polygon, float(self.cfg.polygon_margin))
         self.com_constraint.polygon = init_polygon
-        self.com_constraint.configure('com_constraint', 'soft', 1.0)
+        self.com_constraint.configure('com_constraint', 'soft', float(self.cfg.com_constraint_weight))
 
         # --- gait manager ---
         self.gait_params = GaitParams(
@@ -165,6 +170,8 @@ class SpiderIK:
             cmd_epsilon=float(self.cfg.cmd_epsilon),
             cmd_timeout=float(self.cfg.cmd_timeout),
             stand_transition_duration=float(self.cfg.stand_transition_duration),
+            qs_cycle_period = float(self.cfg.cycle_period),  # use same cycle period
+            qs_swing_duty = (1-self.cfg.stand_transition_duration),  # increased duty for more stability
         )
         self.gait = GaitCycleManager(params=self.gait_params, dtype=np.float64)
         self.gait.set_stand_targets(self.target_pos, self.target_ori)
@@ -229,22 +236,6 @@ class SpiderIK:
         if len(support_polygon) >= 3:
             self.com_constraint.polygon = np.array(support_polygon, dtype=float)
 
-        # log support polygon
-        sp = [np.asarray(x, dtype=float).reshape(2) for x in support_polygon]
-        while len(sp) < 4:
-            sp.append(np.array([np.nan, np.nan], dtype=float))
-        if self.logger is not None:
-            self.logger.write_row(
-                name='support_polygon',
-                filename='support_polygon_data.csv',
-                header=['t'] + [f'p{i}_x' for i in range(4)] + [f'p{i}_y' for i in range(4)],
-                row=[
-                    self.t,
-                    float(sp[0][0]), float(sp[1][0]), float(sp[2][0]), float(sp[3][0]),
-                    float(sp[0][1]), float(sp[1][1]), float(sp[2][1]), float(sp[3][1]),
-                ],
-            )
-
         # log targets
         if self.logger is not None:
             self.logger.write_row(
@@ -253,14 +244,14 @@ class SpiderIK:
                 header=['t', 'x', 'y', 'z'],
                 row=[self.t, float(plan.target_pos['com'][0]), float(plan.target_pos['com'][1]), float(plan.target_pos['com'][2])],
             )
-            for leg in ALL_LEGS:
-                p = plan.target_pos[leg]
-                self.logger.write_row(
-                    name=f'{leg.lower()}_target',
-                    filename=f'{leg}_target_data.csv',
-                    header=['t', 'x', 'y', 'z'],
-                    row=[self.t, float(p[0]), float(p[1]), float(p[2])],
-                )
+
+            p = plan.target_pos["LH"]
+            self.logger.write_row(
+                name='LH_target',
+                filename='LH_target_data.csv',
+                header=['t', 'x', 'y', 'z'],
+                row=[self.t, float(p[0]), float(p[1]), float(p[2])],
+            )
 
             self.logger.write_row(
                 name='contact_state',

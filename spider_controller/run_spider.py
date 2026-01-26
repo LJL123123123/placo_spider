@@ -40,9 +40,9 @@ class Keyboard:
         self.press_timeout = 0.18
 
         # speed params
-        self.speed_forward = 0.25
-        self.speed_lateral = 0.15
-        self.yaw_speed = 0.35
+        self.speed_forward = 0.2
+        self.speed_lateral = 0.1
+        self.yaw_speed = 0.3
         self.height_speed = 0.05
 
     def restore(self):
@@ -105,11 +105,11 @@ class Keyboard:
 
 def main():
     cfg = SpiderIkConfig(
-        dt=0.01,
+        dt=0.001,
         gait_mode='quasi_static',
-        cycle_period=1.0,
-        swing_height=0.08,
-        stand_transition_duration=0.1,
+        cycle_period=0.5,
+        swing_height=0.1,
+        stand_transition_duration=0.05,
     )
 
     spider = SpiderIK(cfg)

@@ -48,10 +48,10 @@ class GaitParams:
     # Quasi-static (crawl) parameters
     # A full crawl cycle is split into 4 equal phases; in each phase
     # only one leg is swinging (3 legs in stance).
-    qs_cycle_period: float = 1.0
+    qs_cycle_period: float = 0.5
     # Swing duty inside each single-leg phase. Must be in (0,1).
     # Example: 0.5 means first half of the phase is swing, second half is stance.
-    qs_swing_duty: float = 0.6
+    qs_swing_duty: float = 0.8
     # Swing order for crawl gait (typical: LF -> RH -> RF -> LH)
     qs_order: tuple = ("LF", "RF", "RH", "LH")
 
@@ -119,6 +119,30 @@ class GaitCycleManager:
         # This is critical for world-fixed stance + continuous touchdown.
         self._prev_first_half = None  # type: Optional[bool]
 
+        # Touchdown smoothing: when a leg transitions from swing->stance, we may
+        # need to reconcile the previous swing trajectory endpoint (pf) with the
+        # stance representation (world-fixed _feet_world). Previously we forced
+        # an instantaneous touchdown at phase boundary, which creates discrete
+        # jumps in the logged targets and can create control discontinuities.
+        #
+        # New behavior: when a leg becomes stance, we blend its target from the
+        # last swing target towards the stance anchor over a short duration.
+        self._touchdown_blend_active = {k: False for k in ALL_LEGS}
+        self._touchdown_blend_t0 = {k: 0.0 for k in ALL_LEGS}
+        self._touchdown_blend_p0: Dict[str, np.ndarray] = {}
+        self._touchdown_blend_pf: Dict[str, np.ndarray] = {}
+        # Duration in seconds. Small but non-zero to guarantee continuity.
+        self._touchdown_blend_duration = 0.06
+
+        # Contact state "anticipation": mark the next-to-swing leg(s) as 0
+        # slightly before the actual swing starts. This is useful for downstream
+        # controllers that want to prepare unloading.
+        #
+        # Interpretation after this change:
+        # - contact_state[leg] = 0: leg is swinging OR is the next planned swing
+        # - contact_state[leg] = 1: leg is in stance and not the next swing leg
+        self._contact_anticipation_time = 0.10  # seconds
+
         # Quasi-static phase tracking (for explicit boundary handling)
         self._prev_qs_swing_leg: Optional[str] = None
 
@@ -182,6 +206,28 @@ class GaitCycleManager:
         p2 = p.copy()
         p2[2] = p2[2] + z_bump
         return p2
+
+    def _start_touchdown_blend(self, leg: str, t: float, p0: np.ndarray, pf: np.ndarray):
+        """Start a short blend for a swing->stance transition."""
+        self._touchdown_blend_active[leg] = True
+        self._touchdown_blend_t0[leg] = float(t)
+        self._touchdown_blend_p0[leg] = np.asarray(p0, dtype=self.dtype).copy()
+        self._touchdown_blend_pf[leg] = np.asarray(pf, dtype=self.dtype).copy()
+
+    def _eval_touchdown_blend(self, leg: str, t: float) -> Optional[np.ndarray]:
+        """Return blended target if active, else None."""
+        if not self._touchdown_blend_active.get(leg, False):
+            return None
+        T = float(getattr(self, "_touchdown_blend_duration", 0.0))
+        if T <= 1e-9:
+            self._touchdown_blend_active[leg] = False
+            return None
+        s = (float(t) - float(self._touchdown_blend_t0[leg])) / max(1e-9, T)
+        s = float(max(0.0, min(1.0, s)))
+        p = self._cubic(self._touchdown_blend_p0[leg], self._touchdown_blend_pf[leg], s)
+        if s >= 1.0 - 1e-9:
+            self._touchdown_blend_active[leg] = False
+        return p
 
     def update(
         self,
@@ -502,8 +548,12 @@ class GaitCycleManager:
             if self._prev_qs_swing_leg is not None and swing_leg != self._prev_qs_swing_leg:
                 prev = self._prev_qs_swing_leg
                 pf_prev = self._swing_goal[prev].copy() if prev in self._swing_goal else self._feet_world[prev].copy()
+                # Start a short touchdown blend instead of instantaneous snap.
+                p0_prev = np.asarray(target_pos[prev], dtype=self.dtype).copy()
+                self._start_touchdown_blend(prev, t, p0_prev, pf_prev)
                 self._feet_world[prev] = pf_prev.copy()
-                new_pos[prev] = pf_prev.copy()
+                p_blend_prev = self._eval_touchdown_blend(prev, t)
+                new_pos[prev] = p_blend_prev if p_blend_prev is not None else pf_prev.copy()
                 self._swing_active[prev] = False
                 self._swing_start[prev] = pf_prev.copy()
                 self._swing_goal[prev] = pf_prev.copy()
@@ -517,7 +567,8 @@ class GaitCycleManager:
             # Stance legs: world-fixed
             for leg in stance_legs:
                 self._swing_active[leg] = False
-                new_pos[leg] = self._feet_world[leg].copy()
+                p_blend = self._eval_touchdown_blend(leg, t)
+                new_pos[leg] = p_blend if p_blend is not None else self._feet_world[leg].copy()
 
             # Swing leg: if active, generate swing trajectory; otherwise keep world-fixed
             if swing_active:
@@ -538,7 +589,21 @@ class GaitCycleManager:
             else:
                 new_pos[swing_leg] = self._feet_world[swing_leg].copy()
 
+            # contact_state: 0 for current swing, and also 0 for the next planned swing
+            # to indicate "unloading trend".
             contact_state = {leg: (leg in stance_legs) for leg in ALL_LEGS}
+            for leg in ALL_LEGS:
+                if leg not in stance_legs:
+                    contact_state[leg] = False
+
+            # Scheme A: only anticipate the next swing when we are currently in
+            # an all-stance state (no swing legs active).
+            if len(swing_legs) == 0:
+                # Next swing leg at quasi-static boundary is order[(idx+1)%4].
+                next_leg = str(order[(idx + 1) % 4])
+                t_phase_remain = float((1.0 - float(u)) * (T / 4.0))
+                if t_phase_remain <= float(self._contact_anticipation_time):
+                    contact_state[next_leg] = False
             return GaitPlan(
                 in_cycle=self.in_cycle,
                 stance_legs=stance_legs,
@@ -561,9 +626,16 @@ class GaitCycleManager:
         if half_changed:
             prev_swing = PAIR1 if self._prev_first_half else PAIR2
             for leg in prev_swing:
+                # Previous behavior forced instantaneous touchdown here. That creates
+                # discontinuities when the leg is mid-swing at the phase boundary.
+                # New behavior: start a short touchdown blend towards the planned
+                # landing point.
                 pf = self._swing_goal[leg].copy() if leg in self._swing_goal else self._feet_world[leg].copy()
+                p0 = np.asarray(target_pos[leg], dtype=self.dtype).copy()
+                self._start_touchdown_blend(leg, t, p0, pf)
+                # Keep stance anchor in world updated to pf immediately (so stance
+                # remains world-consistent); the output target will be blended.
                 self._feet_world[leg] = pf.copy()
-                new_pos[leg] = pf.copy()
                 self._swing_active[leg] = False
                 self._swing_start[leg] = pf.copy()
                 self._swing_goal[leg] = pf.copy()
@@ -585,7 +657,10 @@ class GaitCycleManager:
 
         for leg in stance_legs:
             self._swing_active[leg] = False
-            new_pos[leg] = self._feet_world[leg].copy()
+            # World-fixed stance, but allow short touchdown blending if the
+            # leg just transitioned from swing.
+            p_blend = self._eval_touchdown_blend(leg, t)
+            new_pos[leg] = p_blend if p_blend is not None else self._feet_world[leg].copy()
 
         for leg in swing_legs:
             p0 = self._swing_start[leg]
@@ -599,7 +674,34 @@ class GaitCycleManager:
                 self._feet_world[leg] = pf.copy()
                 self._swing_active[leg] = False
 
-        contact_state = {leg: (leg in stance_legs) for leg in ALL_LEGS}
+        # contact_state (trot):
+        # - 0 for current swing legs
+        # - 0 for next swing legs when close to boundary (anticipation)
+        # - 1 otherwise
+        contact_state = {leg: True for leg in ALL_LEGS}
+        for leg in swing_legs:
+            contact_state[leg] = False
+
+        # Predict next swing pair for trot.
+        # Remaining time to the half-cycle boundary:
+        # - first_half: boundary at phase=0.5, remaining = (0.5 - phase)*T
+        # - second_half: boundary at phase=1.0, remaining = (1.0 - phase)*T
+        Tt = float(self.params.cycle_period)
+        if first_half:
+            t_remain = float((0.5 - float(phase)) * Tt)
+            next_swing = PAIR2
+        else:
+            t_remain = float((1.0 - float(phase)) * Tt)
+            next_swing = PAIR1
+
+        # Scheme A: only anticipate the next swing when we are currently in an
+        # all-stance state. For trot, this practically never happens unless you
+        # introduce an explicit double-stance phase, but it matches the user's
+        # semantics precisely and avoids "all legs = 0".
+        if len(swing_legs) == 0:
+            if t_remain <= float(self._contact_anticipation_time):
+                for leg in next_swing:
+                    contact_state[leg] = False
         return GaitPlan(
             in_cycle=self.in_cycle,
             stance_legs=stance_legs,
