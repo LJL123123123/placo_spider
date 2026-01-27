@@ -543,32 +543,56 @@ class GaitCycleManager:
             swing_legs = [swing_leg] if swing_active else []
             stance_legs = [l for l in ALL_LEGS if l not in swing_legs]
 
-            # Boundary handling: if previous phase's swing leg changed, force touchdown
-            # for the previous swing leg to avoid snapping back to old _feet_world.
-            if self._prev_qs_swing_leg is not None and swing_leg != self._prev_qs_swing_leg:
-                prev = self._prev_qs_swing_leg
-                pf_prev = self._swing_goal[prev].copy() if prev in self._swing_goal else self._feet_world[prev].copy()
-                # Start a short touchdown blend instead of instantaneous snap.
-                p0_prev = np.asarray(target_pos[prev], dtype=self.dtype).copy()
-                self._start_touchdown_blend(prev, t, p0_prev, pf_prev)
-                self._feet_world[prev] = pf_prev.copy()
-                p_blend_prev = self._eval_touchdown_blend(prev, t)
-                new_pos[prev] = p_blend_prev if p_blend_prev is not None else pf_prev.copy()
-                self._swing_active[prev] = False
-                self._swing_start[prev] = pf_prev.copy()
-                self._swing_goal[prev] = pf_prev.copy()
-
-            self._prev_qs_swing_leg = swing_leg
-
             # Quasi-static step placement: smaller lookahead (more conservative)
             mid_time = 0.5 * (T / 4.0)  # half of a single-leg phase
             delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
 
+            # Boundary handling: if previous phase's swing leg changed, force touchdown
+            # for the previous swing leg to avoid snapping back to old _feet_world.
+            # IMPORTANT: check BEFORE updating _prev_qs_swing_leg!
+            if self._prev_qs_swing_leg is not None and swing_leg != self._prev_qs_swing_leg:
+                prev = self._prev_qs_swing_leg
+                # Use the already-planned swing goal - don't recompute!
+                # Recomputing with current COM creates a jump because COM has moved.
+                pf_prev = self._swing_goal[prev].copy() if prev in self._swing_goal else self._feet_world[prev].copy()
+                
+                # Start a short touchdown blend instead of instantaneous snap.
+                # Previous swing leg should be at its END position (s=1.0).
+                p0_prev = (
+                    self._swing_traj(self._swing_start[prev], pf_prev, 1.0)
+                    if self._swing_active.get(prev, False)
+                    else np.asarray(target_pos[prev], dtype=self.dtype).copy()
+                )
+                self._start_touchdown_blend(prev, t, p0_prev, pf_prev)
+                self._feet_world[prev] = pf_prev.copy()
+                # Use the blend output immediately (at s=0 this equals p0_prev),
+                # so the boundary frame is continuous AND we keep the same path
+                # for subsequent stance frames.
+                p_blend_prev = self._eval_touchdown_blend(prev, t)
+                new_pos[prev] = p_blend_prev if p_blend_prev is not None else p0_prev.copy()
+                self._swing_active[prev] = False
+
+            # Update the previous swing leg tracker AFTER boundary handling
+            self._prev_qs_swing_leg = swing_leg
+
             # Stance legs: world-fixed
             for leg in stance_legs:
-                self._swing_active[leg] = False
-                p_blend = self._eval_touchdown_blend(leg, t)
-                new_pos[leg] = p_blend if p_blend is not None else self._feet_world[leg].copy()
+                # If this leg WAS swing-active but now becomes stance, start touchdown blend
+                if self._swing_active.get(leg, False):
+                    # This leg just transitioned from swing to stance
+                    pf = self._swing_goal.get(leg, self._feet_world.get(leg, target_pos[leg])).copy()
+                    p0 = self._swing_traj(self._swing_start[leg], pf, 1.0) if leg in self._swing_start else pf.copy()
+                    self._start_touchdown_blend(leg, t, p0, pf)
+                    self._feet_world[leg] = pf.copy()
+                    self._swing_active[leg] = False
+                    # Output blend start for continuity
+                    p_blend = self._eval_touchdown_blend(leg, t)
+                    new_pos[leg] = p_blend if p_blend is not None else p0.copy()
+                else:
+                    # Already in stance, continue blend or use feet_world
+                    self._swing_active[leg] = False
+                    p_blend = self._eval_touchdown_blend(leg, t)
+                    new_pos[leg] = p_blend if p_blend is not None else self._feet_world[leg].copy()
 
             # Swing leg: if active, generate swing trajectory; otherwise keep world-fixed
             if swing_active:
@@ -621,6 +645,10 @@ class GaitCycleManager:
         s_phase = (phase / 0.5) if first_half else ((phase - 0.5) / 0.5)
         s_phase = max(0.0, min(1.0, float(s_phase)))
 
+        # Compute step placement offset (needed for boundary handling too)
+        mid_time = 0.25 * float(self.params.cycle_period)
+        delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
+
         # Detect half-cycle switch and force touchdown for previous swing legs
         half_changed = (self._prev_first_half is not None) and (first_half != self._prev_first_half)
         if half_changed:
@@ -630,8 +658,16 @@ class GaitCycleManager:
                 # discontinuities when the leg is mid-swing at the phase boundary.
                 # New behavior: start a short touchdown blend towards the planned
                 # landing point.
-                pf = self._swing_goal[leg].copy() if leg in self._swing_goal else self._feet_world[leg].copy()
-                p0 = np.asarray(target_pos[leg], dtype=self.dtype).copy()
+                # CRITICAL FIX: recompute landing point based on CURRENT COM position,
+                # not the stale _swing_goal from the start of the previous swing phase.
+                pf = self._swing_start[leg].copy() if leg in self._swing_start else self._feet_world[leg].copy()
+                pf[0:2] = com_relative_xy_for_leg(leg) + delta_xy
+                pf[2] = float(self._stand_pos[leg][2]) if (self._stand_pos is not None and leg in self._stand_pos) else 0.0
+                
+                # IMPORTANT: make the transition continuous.
+                # Previous swing leg should be at its END position (s=1.0),
+                # not at the new half-cycle's s_phase (which starts from 0).
+                p0 = self._swing_traj(self._swing_start[leg], pf, 1.0) if self._swing_active.get(leg, False) else np.asarray(target_pos[leg], dtype=self.dtype).copy()
                 self._start_touchdown_blend(leg, t, p0, pf)
                 # Keep stance anchor in world updated to pf immediately (so stance
                 # remains world-consistent); the output target will be blended.
@@ -640,15 +676,16 @@ class GaitCycleManager:
                 self._swing_start[leg] = pf.copy()
                 self._swing_goal[leg] = pf.copy()
 
+                # Also set this frame's output to the blend start, otherwise the
+                # caller may observe an instantaneous jump at the boundary.
+                new_pos[leg] = p0.copy()
+
             prev_stance = [l for l in ALL_LEGS if l not in prev_swing]
             for leg in prev_stance:
                 new_pos[leg] = self._feet_world[leg].copy()
 
         self._prev_first_half = first_half
         self._prev_qs_swing_leg = None
-
-        mid_time = 0.25 * float(self.params.cycle_period)
-        delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
 
         for leg in swing_legs:
             if not self._swing_active[leg]:

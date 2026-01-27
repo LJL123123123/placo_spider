@@ -1,0 +1,1 @@
+pip install placo matplotlib mujoco pandas

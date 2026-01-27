@@ -60,12 +60,12 @@ class SpiderIkConfig:
     enable_logger: bool = True
 
     # gait params
-    cycle_period: float = 0.5
+    cycle_period: float = 5.0
     swing_height: float = 0.12
     lookahead: float = 1.0
     cmd_epsilon: float = 1e-4
     cmd_timeout: float = 2.0
-    stand_transition_duration: float = 0.1
+    stand_transition_duration: float = 0.8
 
     # com polygon constraint
     polygon_margin: float = 1.5
@@ -76,7 +76,7 @@ class SpiderIkConfig:
     com_constraint_weight: float = 1e1
 
     # URDF root candidates
-    urdf_candidates: Tuple[str, ...] = ("/home/placo_cpg/spider_sldasm/urdf",)
+    urdf_candidates: Tuple[str, ...] = ("../spider_sldasm/urdf",)
 
 
 class SpiderIK:
@@ -118,10 +118,13 @@ class SpiderIK:
 
         self.robot = self.placo.RobotWrapper(self.urdf_root, self.placo.Flags.ignore_collisions)
         self.robot.set_velocity_limits(0.005)
-        self.robot.model.velocityLimit[0] = 0.005  # ensure all joints have limits
-        self.robot.model.velocityLimit[1] = 0.005  # ensure all joints have limits
-        self.robot.model.velocityLimit[2] = 0.005  # ensure all joints have limits
-        self.solver = self.placo.KinematicsSolver(self.robot)
+        self.robot.model.velocityLimit[0] = 1e-5  # ensure all joints have limits
+        self.robot.model.velocityLimit[1] = 1e-5  # ensure all joints have limits
+        self.robot.model.velocityLimit[2] = 1e-5  # ensure all joints have limits
+        self.robot.model.velocityLimit[3] = 1e-5  # ensure all joints have limits
+        self.robot.model.velocityLimit[4] = 1e-5  # ensure all joints have limits
+        self.robot.model.velocityLimit[5] = 1e-5  # ensure all joints have limits
+        self.solver = self.placo.KinematicsSolver(self.robot);print("self.robot.model.velocityLimit",self.robot.model.velocityLimit)
         self.solver.dt = 0.001
 
         # frames mapping
@@ -157,9 +160,9 @@ class SpiderIK:
             np.array([0.371678, -0.372385]),
             np.array([-0.361251, -0.360544]),
         ])
-        self.com_constraint = self.solver.add_com_polygon_constraint(init_polygon, float(self.cfg.polygon_margin))
-        self.com_constraint.polygon = init_polygon
-        self.com_constraint.configure('com_constraint', 'soft', float(self.cfg.com_constraint_weight))
+        # self.com_constraint = self.solver.add_com_polygon_constraint(init_polygon, float(self.cfg.polygon_margin))
+        # self.com_constraint.polygon = init_polygon
+        # self.com_constraint.configure('com_constraint', 'soft', float(self.cfg.com_constraint_weight))
 
         # --- gait manager ---
         self.gait_params = GaitParams(
@@ -171,7 +174,7 @@ class SpiderIK:
             cmd_timeout=float(self.cfg.cmd_timeout),
             stand_transition_duration=float(self.cfg.stand_transition_duration),
             qs_cycle_period = float(self.cfg.cycle_period),  # use same cycle period
-            qs_swing_duty = (1-self.cfg.stand_transition_duration),  # increased duty for more stability
+            qs_swing_duty = 0.6,  # 60% of each leg phase is swing, 40% is stance (more conservative for stability)
         )
         self.gait = GaitCycleManager(params=self.gait_params, dtype=np.float64)
         self.gait.set_stand_targets(self.target_pos, self.target_ori)
@@ -233,8 +236,8 @@ class SpiderIK:
         # update support polygon from contact_state (use planned positions)
         contacts = [leg for leg, c in plan.contact_state.items() if bool(c)]
         support_polygon = [np.asarray(plan.target_pos[leg][0:2], dtype=float) for leg in contacts]
-        if len(support_polygon) >= 3:
-            self.com_constraint.polygon = np.array(support_polygon, dtype=float)
+        # if len(support_polygon) >= 3:
+        #     self.com_constraint.polygon = np.array(support_polygon, dtype=float)
 
         # log targets
         if self.logger is not None:
