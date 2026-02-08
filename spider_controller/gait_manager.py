@@ -28,7 +28,7 @@ import numpy as np
 
 PAIR1 = ['LF', 'RH']
 PAIR2 = ['RF', 'LH']
-ALL_LEGS = ['LF', 'RF', 'LH', 'RH']
+ALL_LEGS = ['LF', 'RF', 'RH', 'LH']
 
 GaitMode = Literal["trot", "quasi_static"]
 
@@ -55,6 +55,13 @@ class GaitParams:
     # Swing order for crawl gait (typical: LF -> RH -> RF -> LH)
     qs_order: tuple = ("LF", "RF", "RH", "LH")
 
+    contact_anticipation_time: float = 0.2  # seconds
+
+    # 观测融合相关
+    beta_pose: float = 0.1       # 默认偏航角融合系数
+    beta_xy: float = 0.05        # 默认位置融合系数
+    slip_threshold: float = 0.06 # 滑转恢复门限 (米)
+
 
 @dataclass
 class GaitPlan:
@@ -65,6 +72,8 @@ class GaitPlan:
     contact_state: Dict[str, bool]
     target_pos: Dict[str, np.ndarray]
     target_ori: Dict[str, np.ndarray]
+
+    is_stand: bool = False
 
 
 class GaitCycleManager:
@@ -141,10 +150,14 @@ class GaitCycleManager:
         # Interpretation after this change:
         # - contact_state[leg] = 0: leg is swinging OR is the next planned swing
         # - contact_state[leg] = 1: leg is in stance and not the next swing leg
-        self._contact_anticipation_time = 0.10  # seconds
+        self._contact_anticipation_time = self.params.contact_anticipation_time  # seconds
 
         # Quasi-static phase tracking (for explicit boundary handling)
         self._prev_qs_swing_leg: Optional[str] = None
+
+        # 新增内部状态
+        self._world_com_pos = np.zeros(3, dtype=self.dtype)
+        self._world_yaw = 0.0
 
     def set_gait_mode(self, mode: GaitMode):
         """Set gait mode: 'trot' or 'quasi_static'.
@@ -229,6 +242,42 @@ class GaitCycleManager:
             self._touchdown_blend_active[leg] = False
         return p
 
+    def sync_from_measured(
+        self,
+        com_pos_w: np.ndarray,      # [3]
+        com_yaw: float,             # scalar
+        beta_pose: Optional[float] = None
+    ):
+        """
+        参考 GaitManagerCuda 的 sync_from_measured 实现。
+        用于将实测位姿融合进内部规划状态。
+        """
+        beta_p = beta_pose if beta_pose is not None else self.params.beta_pose
+        
+        # 1) XY 门限融合 (防止噪声注入，同时支持滑转恢复)
+        meas_xy = com_pos_w[0:2]
+        plan_xy = self._world_com_pos[0:2]
+
+        err = meas_xy - plan_xy
+        err_norm = np.linalg.norm(err)
+
+        if err_norm > self.params.slip_threshold:
+            # 误差过大，强制对齐（滑转恢复）
+            self._world_com_pos[0:2] = meas_xy
+        else:
+            # 误差较小，平滑融合
+            self._world_com_pos[0:2] = (1.0 - self.params.beta_xy) * plan_xy + self.params.beta_xy * meas_xy
+
+        # 2) 偏航角同步 (低通滤波)
+        if beta_p >= 1.0:
+            self._world_yaw = com_yaw
+        else:
+            # 简单的角度加权（注意：实际应用中建议处理角度环绕问题）
+            diff = com_yaw - self._world_yaw
+            # 角度标准化到 [-pi, pi]
+            diff = (diff + np.pi) % (2 * np.pi) - np.pi
+            self._world_yaw += beta_p * diff
+    
     def update(
         self,
         t: float,
@@ -237,7 +286,6 @@ class GaitCycleManager:
         cmd_vxyz: np.ndarray,
         cmd_yaw_rate: float,
         dt: float,
-        *,
         meas_com_pos: Optional[np.ndarray] = None,
         meas_com_R: Optional[np.ndarray] = None,
     ) -> GaitPlan:
@@ -622,7 +670,10 @@ class GaitCycleManager:
 
             # Scheme A: only anticipate the next swing when we are currently in
             # an all-stance state (no swing legs active).
+            is_stand = False
             if len(swing_legs) == 0:
+                is_stand = True
+            if is_stand:
                 # Next swing leg at quasi-static boundary is order[(idx+1)%4].
                 next_leg = str(order[(idx + 1) % 4])
                 t_phase_remain = float((1.0 - float(u)) * (T / 4.0))
@@ -635,115 +686,5 @@ class GaitCycleManager:
                 contact_state=contact_state,
                 target_pos=new_pos,
                 target_ori=new_ori,
+                is_stand=is_stand,
             )
-
-        # --- Default: trot gait (two-leg swing) ---
-        phase = ((t - self._t0) % self.params.cycle_period) / self.params.cycle_period
-        first_half = phase < 0.5
-        swing_legs = PAIR1 if first_half else PAIR2
-        stance_legs = [l for l in ALL_LEGS if l not in swing_legs]
-        s_phase = (phase / 0.5) if first_half else ((phase - 0.5) / 0.5)
-        s_phase = max(0.0, min(1.0, float(s_phase)))
-
-        # Compute step placement offset (needed for boundary handling too)
-        mid_time = 0.25 * float(self.params.cycle_period)
-        delta_xy = np.array([v_world[0], v_world[1]], dtype=self.dtype) * mid_time
-
-        # Detect half-cycle switch and force touchdown for previous swing legs
-        half_changed = (self._prev_first_half is not None) and (first_half != self._prev_first_half)
-        if half_changed:
-            prev_swing = PAIR1 if self._prev_first_half else PAIR2
-            for leg in prev_swing:
-                # Previous behavior forced instantaneous touchdown here. That creates
-                # discontinuities when the leg is mid-swing at the phase boundary.
-                # New behavior: start a short touchdown blend towards the planned
-                # landing point.
-                # CRITICAL FIX: recompute landing point based on CURRENT COM position,
-                # not the stale _swing_goal from the start of the previous swing phase.
-                pf = self._swing_start[leg].copy() if leg in self._swing_start else self._feet_world[leg].copy()
-                pf[0:2] = com_relative_xy_for_leg(leg) + delta_xy
-                pf[2] = float(self._stand_pos[leg][2]) if (self._stand_pos is not None and leg in self._stand_pos) else 0.0
-                
-                # IMPORTANT: make the transition continuous.
-                # Previous swing leg should be at its END position (s=1.0),
-                # not at the new half-cycle's s_phase (which starts from 0).
-                p0 = self._swing_traj(self._swing_start[leg], pf, 1.0) if self._swing_active.get(leg, False) else np.asarray(target_pos[leg], dtype=self.dtype).copy()
-                self._start_touchdown_blend(leg, t, p0, pf)
-                # Keep stance anchor in world updated to pf immediately (so stance
-                # remains world-consistent); the output target will be blended.
-                self._feet_world[leg] = pf.copy()
-                self._swing_active[leg] = False
-                self._swing_start[leg] = pf.copy()
-                self._swing_goal[leg] = pf.copy()
-
-                # Also set this frame's output to the blend start, otherwise the
-                # caller may observe an instantaneous jump at the boundary.
-                new_pos[leg] = p0.copy()
-
-            prev_stance = [l for l in ALL_LEGS if l not in prev_swing]
-            for leg in prev_stance:
-                new_pos[leg] = self._feet_world[leg].copy()
-
-        self._prev_first_half = first_half
-        self._prev_qs_swing_leg = None
-
-        for leg in swing_legs:
-            if not self._swing_active[leg]:
-                self._swing_active[leg] = True
-                self._swing_start[leg] = self._feet_world[leg].copy()
-
-        for leg in stance_legs:
-            self._swing_active[leg] = False
-            # World-fixed stance, but allow short touchdown blending if the
-            # leg just transitioned from swing.
-            p_blend = self._eval_touchdown_blend(leg, t)
-            new_pos[leg] = p_blend if p_blend is not None else self._feet_world[leg].copy()
-
-        for leg in swing_legs:
-            p0 = self._swing_start[leg]
-            pf = p0.copy()
-            pf[0:2] = com_relative_xy_for_leg(leg) + delta_xy
-            pf[2] = float(self._stand_pos[leg][2]) if (self._stand_pos is not None and leg in self._stand_pos) else 0.0
-            self._swing_goal[leg] = pf
-
-            new_pos[leg] = self._swing_traj(p0, pf, s_phase)
-            if s_phase >= 1.0 - 1e-6:
-                self._feet_world[leg] = pf.copy()
-                self._swing_active[leg] = False
-
-        # contact_state (trot):
-        # - 0 for current swing legs
-        # - 0 for next swing legs when close to boundary (anticipation)
-        # - 1 otherwise
-        contact_state = {leg: True for leg in ALL_LEGS}
-        for leg in swing_legs:
-            contact_state[leg] = False
-
-        # Predict next swing pair for trot.
-        # Remaining time to the half-cycle boundary:
-        # - first_half: boundary at phase=0.5, remaining = (0.5 - phase)*T
-        # - second_half: boundary at phase=1.0, remaining = (1.0 - phase)*T
-        Tt = float(self.params.cycle_period)
-        if first_half:
-            t_remain = float((0.5 - float(phase)) * Tt)
-            next_swing = PAIR2
-        else:
-            t_remain = float((1.0 - float(phase)) * Tt)
-            next_swing = PAIR1
-
-        # Scheme A: only anticipate the next swing when we are currently in an
-        # all-stance state. For trot, this practically never happens unless you
-        # introduce an explicit double-stance phase, but it matches the user's
-        # semantics precisely and avoids "all legs = 0".
-        if len(swing_legs) == 0:
-            if t_remain <= float(self._contact_anticipation_time):
-                for leg in next_swing:
-                    contact_state[leg] = False
-        return GaitPlan(
-            in_cycle=self.in_cycle,
-            stance_legs=stance_legs,
-            swing_legs=swing_legs,
-            contact_state=contact_state,
-            target_pos=new_pos,
-            target_ori=new_ori,
-        )

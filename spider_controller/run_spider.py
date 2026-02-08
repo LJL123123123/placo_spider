@@ -22,8 +22,22 @@ import tty
 import atexit
 import numpy as np
 
-from spider_ik import SpiderIK, SpiderIkConfig
+from spider_ik import SpiderIK, SpiderIkConfig,SpiderIkData
+from typing import Dict, Optional, Tuple, List
+from shared_sim_data import SimToCPGData, CPGToSimData
 
+import argparse
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser()
+
+    p.add_argument(
+        "--enable-shm",
+        action="store_true",
+        help="Enable shared memory communication with MuJoCo.",
+    )
+
+    return p.parse_args()
 
 class Keyboard:
     def __init__(self):
@@ -42,7 +56,7 @@ class Keyboard:
         # speed params
         self.speed_forward = 0.1
         self.speed_lateral = 0.1
-        self.yaw_speed = 0.1
+        self.yaw_speed = 0.2
         self.height_speed = 0.05
 
     def restore(self):
@@ -102,14 +116,25 @@ class Keyboard:
 
         return np.array([vx, vy, vz], dtype=np.float64), float(yaw)
 
-
 def main():
+    args = parse_args()
+    data = SpiderIkData(
+        q = np.zeros(19, dtype=np.float64),
+        qd = np.zeros(19, dtype=np.float64),
+        qdd = np.zeros(19, dtype=np.float64),
+        ctrl = np.zeros(12, dtype=np.float64),
+    )
+    # --- shared memory ---
+    sim_to_cpg: Optional[SimToCPGData] = None
+    cpg_to_sim: Optional[CPGToSimData] = None
+    if args.enable_shm:
+        # attach (MuJoCo creates)
+        sim_to_cpg = SimToCPGData(create=False)
+        cpg_to_sim = CPGToSimData(create=False)
     cfg = SpiderIkConfig(
         dt=0.001,
         gait_mode='quasi_static',
-        cycle_period=2.0,
-        swing_height=0.1,
-        stand_transition_duration=0.6,
+
     )
 
     spider = SpiderIK(cfg)
@@ -125,8 +150,15 @@ def main():
         while True:
             kb.poll()
             cmd_vxyz, cmd_yaw = kb.get_cmd()
-            spider.step(cmd_vxyz, cmd_yaw)
+            data = spider.step(cmd_vxyz, cmd_yaw)
             time.sleep(cfg.dt)
+
+            # send to MuJoCo
+            if args.enable_shm and cpg_to_sim is not None:
+                try:
+                    cpg_to_sim.write(qpos_desired=data.q, ctrl_desired=data.ctrl, kp=spider.kp_gains, kd=spider.kd_gains)
+                except Exception:
+                    pass
     except KeyboardInterrupt:
         pass
 

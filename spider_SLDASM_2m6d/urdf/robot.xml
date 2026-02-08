@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<mujoco model="spider_SLDASM_2m6d">
+  <compiler angle="radian" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <asset>
+    <!-- Meshes referenced in URDF -->
+    <mesh name="base_link" file="../meshes/base_link.STL"/>
+    <mesh name="FR_hip" file="../meshes/FR_hip.STL"/>
+    <mesh name="FR_thigh" file="../meshes/FR_thigh.STL"/>
+    <mesh name="FR_calf" file="../meshes/FR_calf.STL"/>
+    <mesh name="FR_steer" file="../meshes/FR_steer.STL"/>
+    <mesh name="FR_trans" file="../meshes/FR_trans.STL"/>
+    <mesh name="FR_wheel" file="../meshes/FR_wheel.STL"/>
+    <mesh name="FL_hip" file="../meshes/FL_hip.STL"/>
+    <mesh name="FL_thigh" file="../meshes/FL_thigh.STL"/>
+    <mesh name="FL_calf" file="../meshes/FL_calf.STL"/>
+    <mesh name="FL_steer" file="../meshes/FL_steer.STL"/>
+    <mesh name="FL_trans" file="../meshes/FL_trans.STL"/>
+    <mesh name="FL_wheel" file="../meshes/FL_wheel.STL"/>
+    <mesh name="RL_hip" file="../meshes/RL_hip.STL"/>
+    <mesh name="RL_thigh" file="../meshes/RL_thigh.STL"/>
+    <mesh name="RL_calf" file="../meshes/RL_calf.STL"/>
+    <mesh name="RL_steer" file="../meshes/RL_steer.STL"/>
+    <mesh name="RL_trans" file="../meshes/RL_trans.STL"/>
+    <mesh name="RL_wheel" file="../meshes/RL_wheel.STL"/>
+    <mesh name="RR_hip" file="../meshes/RR_hip.STL"/>
+    <mesh name="RR_thigh" file="../meshes/RR_thigh.STL"/>
+    <mesh name="RR_calf" file="../meshes/RR_calf.STL"/>
+    <mesh name="RR_steer" file="../meshes/RR_steer.STL"/>
+    <mesh name="RR_trans" file="../meshes/RR_trans.STL"/>
+    <mesh name="RR_wheel" file="../meshes/RR_wheel.STL"/>
+  </asset>
+
+  <default>
+    <joint armature="0" damping="0.1" stiffness="0"/>
+    <geom contype="1" conaffinity="1" friction="0.7 .1 .1" density="1000"/>
+  </default>
+
+  <worldbody>
+  <body name="base_link" pos="0 0 0.26" euler="0 0 0">
+    <joint name="root" type="free" />
+    <inertial pos="0. 0 0." mass="7.61" diaginertia="0.067729 0.0725 0.12513"/>
+    <geom type="mesh" mesh="base_link" name="geom_base_link"/>
+    <body name="FR_hip" pos="0.15 -0.15 -0.00525" euler="0 0 -0.7854">
+      <inertial pos="0.082474 0 0.000806" mass="1.9015" diaginertia="0.00332 0.0066457 0.004961"/>
+      <joint name="FR_hip_joint_rev" type="hinge" axis="0 0 1" range="-1.1345 1.1345"/>
+      <geom type="mesh" mesh="FR_hip" name="geom_FR_hip"/>
+      <body name="FR_thigh" pos="0.122 -0.0005 0" euler="0 0 0">
+        <inertial pos="0.084796 0 0.004794" mass="0.6009" diaginertia="0.0013857 0.0023339 0.0031649"/>
+        <joint name="FR_thigh_joint_rev" type="hinge" axis="0 1 0" range="-1.0472 1.5708"/>
+        <geom type="mesh" mesh="FR_thigh" name="geom_FR_thigh"/>
+        <body name="FR_calf" pos="0.16 0 0" euler="0 0 0">
+          <inertial pos="0.020656 0 -0.035012" mass="0.95" diaginertia="0.0014545 0.0017157 0.00086925"/>
+          <joint name="FR_calf_joint_rev" type="hinge" axis="0 1 0" range="-1.5707963268 1.0471975512"/>
+          <geom type="mesh" mesh="FR_calf" name="geom_FR_calf"/>
+          <body name="FR_steer" pos="0.033 0 -0.097" euler="0 0 0">
+            <inertial pos="-0.010789 0 -0.038549" mass="0.4937" diaginertia="0.00032831 0.00032683 0.00023698"/>
+            <!-- <joint name="FR_steer_joint_rev" type="hinge" axis="0 0 1" range="-0.34907 1.5708"/> -->
+            <geom type="mesh" mesh="FR_steer" name="geom_FR_steer"/>
+            <body name="FR_trans" pos="-0.00099998 0 -0.09" euler="0 0 0">
+              <inertial pos="-4.1e-05 -8.8e-05 -0.045108" mass="0.4204" diaginertia="0.00030185 0.00030059 0.00020305"/>
+              <!-- <joint name="FR_trans_joint_rev" type="hinge" axis="0 1 0" range="-1.5708 0"/> -->
+              <geom type="mesh" mesh="FR_trans" name="geom_FR_trans"/>
+              <body name="FR_wheel" pos="0 0 -0.083" euler="0 0 0">
+                <inertial pos="0 0 0.022661" mass="0.536" diaginertia="0.00073807 0.00073807 0.0011063"/>
+                <!-- <joint name="FR_wheel_joint_rev" type="hinge" axis="0 0 1" range="-1 1"/> -->
+                <geom type="mesh" mesh="FR_wheel" name="geom_FR_wheel"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="FL_hip" pos="0.15 0.15 -0.00525" euler="0 0 0.7854">
+      <inertial pos="0.082474 0 0.000806" mass="1.9015" diaginertia="0.00332 0.0066457 0.004961"/>
+      <joint name="FL_hip_joint_rev" type="hinge" axis="0 0 1" range="-1.1345 1.1345"/>
+      <geom type="mesh" mesh="FL_hip" name="geom_FL_hip"/>
+      <body name="FL_thigh" pos="0.122 -0.0005 0" euler="0 0 0">
+        <inertial pos="0.084796 0 0.004794" mass="0.6009" diaginertia="0.0013857 0.0023339 0.0031649"/>
+        <joint name="FL_thigh_joint_rev" type="hinge" axis="0 1 0" range="-1.0472 1.5708"/>
+        <geom type="mesh" mesh="FL_thigh" name="geom_FL_thigh"/>
+        <body name="FL_calf" pos="0.16 0 0" euler="0 0 0">
+          <inertial pos="0.020656 0 -0.035012" mass="0.95" diaginertia="0.0014545 0.0017157 0.00086925"/>
+          <joint name="FL_calf_joint_rev" type="hinge" axis="0 1 0" range="-1.5707963267949 1.0471975512"/>
+          <geom type="mesh" mesh="FL_calf" name="geom_FL_calf"/>
+          <body name="FL_steer" pos="0.033 0 -0.097" euler="0 0 0">
+            <inertial pos="-0.010789 0 -0.038549" mass="0.4937" diaginertia="0.00032831 0.00032683 0.00023698"/>
+            <!-- <joint name="FL_steer_joint_rev" type="hinge" axis="0 0 1" range="-0.349065850398866 1.5707963267949"/> -->
+            <geom type="mesh" mesh="FL_steer" name="geom_FL_steer"/>
+            <body name="FL_trans" pos="-0.00099998 0 -0.09" euler="0 0 0">
+              <inertial pos="-4.1e-05 -8.8e-05 -0.045108" mass="0.4204" diaginertia="0.00030185 0.00030059 0.00020305"/>
+              <!-- <joint name="FL_trans_joint_rev" type="hinge" axis="0 1 0" range="-1.5708 0"/> -->
+              <geom type="mesh" mesh="FL_trans" name="geom_FL_trans"/>
+              <body name="FL_wheel" pos="0 0 -0.083" euler="0 0 0">
+                <inertial pos="0 0 0.022661" mass="0.536" diaginertia="0.00073807 0.00073807 0.0011063"/>
+                <!-- <joint name="FL_wheel_joint_con" type="hinge" axis="0 0 1" range="-1 1"/> -->
+                <geom type="mesh" mesh="FL_wheel" name="geom_FL_wheel"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="RL_hip" pos="-0.15 0.15 -0.00525" euler="0 0 2.3562">
+      <inertial pos="0.082474 0 0.000806" mass="1.9015" diaginertia="0.00332 0.0066457 0.004961"/>
+      <joint name="RL_hip_joint_rev" type="hinge" axis="0 0 1" range="-1.1345 1.1345"/>
+      <geom type="mesh" mesh="RL_hip" name="geom_RL_hip"/>
+      <body name="RL_thigh" pos="0.122 -0.0005 0" euler="0 0 0">
+        <inertial pos="0.084796 0 0.004794" mass="0.6009" diaginertia="0.0013857 0.0023339 0.0031649"/>
+        <joint name="RL_thigh_joint_rev" type="hinge" axis="0 1 0" range="-1.0472 1.5708"/>
+        <geom type="mesh" mesh="RL_thigh" name="geom_RL_thigh"/>
+        <body name="RL_calf" pos="0.16 0 0" euler="0 0 0">
+          <inertial pos="0.020656 0 -0.035012" mass="0.95" diaginertia="0.0014545 0.0017157 0.00086925"/>
+          <joint name="RL_calf_joint_rev" type="hinge" axis="0 1 0" range="-1.5707963268 1.0471975512"/>
+          <geom type="mesh" mesh="RL_calf" name="geom_RL_calf"/>
+          <body name="RL_steer" pos="0.033 0 -0.097" euler="0 0 0">
+            <inertial pos="-0.010789 0 -0.038549" mass="0.4937" diaginertia="0.00032831 0.00032683 0.00023698"/>
+            <!-- <joint name="RL_steer_joint_rev" type="hinge" axis="0 0 1" range="-0.34907 1.5708"/> -->
+            <geom type="mesh" mesh="RL_steer" name="geom_RL_steer"/>
+            <body name="RL_trans" pos="-0.00099998 0 -0.09" euler="0 0 0">
+              <inertial pos="-4.1e-05 -8.8e-05 -0.045108" mass="0.4204" diaginertia="0.00030185 0.00030059 0.00020305"/>
+              <!-- <joint name="RL_trans_joint_rev" type="hinge" axis="0 1 0" range="-1.5708 0"/> -->
+              <geom type="mesh" mesh="RL_trans" name="geom_RL_trans"/>
+              <body name="RL_wheel" pos="0 0 -0.083" euler="0 0 0">
+                <inertial pos="0 0 0.022661" mass="0.536" diaginertia="0.00073807 0.00073807 0.0011063"/>
+                <!-- <joint name="RL_wheel_joint" type="hinge" axis="0 0 1" range="-1 1"/> -->
+                <geom type="mesh" mesh="RL_wheel" name="geom_RL_wheel"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="RR_hip" pos="-0.15 -0.15 -0.00525" euler="0 0 -2.3562">
+      <inertial pos="0.082474 0 0.000806" mass="1.9015" diaginertia="0.00332 0.0066457 0.004961"/>
+      <joint name="RR_hip_joint_rev" type="hinge" axis="0 0 1" range="-1.1345 1.1345"/>
+      <geom type="mesh" mesh="RR_hip" name="geom_RR_hip"/>
+      <body name="RR_thigh" pos="0.122 -0.0005 0" euler="0 0 0">
+        <inertial pos="0.084796 0 0.004794" mass="0.6009" diaginertia="0.0013857 0.0023339 0.0031649"/>
+        <joint name="RR_thigh_joint_rev" type="hinge" axis="0 1 0" range="-1.0472 1.5708"/>
+        <geom type="mesh" mesh="RR_thigh" name="geom_RR_thigh"/>
+        <body name="RR_calf" pos="0.16 0 0" euler="0 0 0">
+          <inertial pos="0.020656 0 -0.035012" mass="0.95" diaginertia="0.0014545 0.0017157 0.00086925"/>
+          <joint name="RR_calf_joint_rev" type="hinge" axis="0 1 0" range="-1.5707963268 1.0471975512"/>
+          <geom type="mesh" mesh="RR_calf" name="geom_RR_calf"/>
+          <body name="RR_steer" pos="0.033 0 -0.097" euler="0 0 0">
+            <inertial pos="-0.010789 0 -0.038549" mass="0.4937" diaginertia="0.00032831 0.00032683 0.00023698"/>
+            <!-- <joint name="RR_steer_joint_rev" type="hinge" axis="0 0 1" range="-0.34907 1.5708"/> -->
+            <geom type="mesh" mesh="RR_steer" name="geom_RR_steer"/>
+            <body name="RR_trans" pos="-0.00099998 0 -0.09" euler="0 0 0">
+              <inertial pos="-4.1e-05 -8.8e-05 -0.045108" mass="0.4204" diaginertia="0.00030185 0.00030059 0.00020305"/>
+              <!-- <joint name="RR_trans_joint_rev" type="hinge" axis="0 1 0" range="-1.5708 0"/> -->
+              <geom type="mesh" mesh="RR_trans" name="geom_RR_trans"/>
+              <body name="RR_wheel" pos="0 0 -0.083" euler="0 0 0">
+                <inertial pos="0 0 0.022661" mass="0.536" diaginertia="0.00073807 0.00073807 0.0011063"/>
+                <!-- <joint name="RR_wheel_joint_con" type="hinge" axis="0 0 1" range="-1 1"/> -->
+                <geom type="mesh" mesh="RR_wheel" name="geom_RR_wheel"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="m_FR_hip_joint_rev" joint="FR_hip_joint_rev" gear="1"/>
+    <motor name="m_FR_thigh_joint_rev" joint="FR_thigh_joint_rev" gear="1"/>
+    <motor name="m_FR_calf_joint_rev" joint="FR_calf_joint_rev" gear="1"/>
+
+    <motor name="m_FL_hip_joint_rev" joint="FL_hip_joint_rev" gear="1"/>
+    <motor name="m_FL_thigh_joint_rev" joint="FL_thigh_joint_rev" gear="1"/>
+    <motor name="m_FL_calf_joint_rev" joint="FL_calf_joint_rev" gear="1"/>
+
+    <motor name="m_RL_hip_joint_rev" joint="RL_hip_joint_rev" gear="1"/>
+    <motor name="m_RL_thigh_joint_rev" joint="RL_thigh_joint_rev" gear="1"/>
+    <motor name="m_RL_calf_joint_rev" joint="RL_calf_joint_rev" gear="1"/>
+
+    <motor name="m_RR_hip_joint_rev" joint="RR_hip_joint_rev" gear="1"/>
+    <motor name="m_RR_thigh_joint_rev" joint="RR_thigh_joint_rev" gear="1"/>
+    <motor name="m_RR_calf_joint_rev" joint="RR_calf_joint_rev" gear="1"/>
+
+  </actuator>
+</mujoco>

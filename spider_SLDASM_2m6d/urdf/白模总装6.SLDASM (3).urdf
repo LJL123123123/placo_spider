@@ -1,0 +1,1845 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="白模总装6.SLDASM">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.008816 0 -0.005958"
+        rpy="0 0 0" />
+      <mass
+        value="7.61" />
+      <inertia
+        ixx="0.067729"
+        ixy="0"
+        ixz="-0.0042236"
+        iyy="0.0725"
+        iyz="0"
+        izz="0.12513" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="FR_hip">
+    <inertial>
+      <origin
+        xyz="0.082474 0 0.000806"
+        rpy="0 0 0" />
+      <mass
+        value="1.9015" />
+      <inertia
+        ixx="0.00332"
+        ixy="0"
+        ixz="0.00015402"
+        iyy="0.0066457"
+        iyz="0"
+        izz="0.004961" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_hip.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_hip.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_hip_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.15 -0.15 -0.00525"
+      rpy="0 0 -0.7854" />
+    <parent
+      link="base_link" />
+    <child
+      link="FR_hip" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.1345"
+      upper="1.1345"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FR_thigh">
+    <inertial>
+      <origin
+        xyz="0.084796 0 0.004794"
+        rpy="0 0 0" />
+      <mass
+        value="0.6009" />
+      <inertia
+        ixx="0.0013857"
+        ixy="0"
+        ixz="-6.6099E-06"
+        iyy="0.0023339"
+        iyz="0"
+        izz="0.0031649" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_thigh.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_thigh.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_thigh_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.122 -0.0005 0"
+      rpy="0 0 0" />
+    <parent
+      link="FR_hip" />
+    <child
+      link="FR_thigh" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.0472"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FR_calf">
+    <inertial>
+      <origin
+        xyz="0.020656 0 -0.035012"
+        rpy="0 0 0" />
+      <mass
+        value="0.95" />
+      <inertia
+        ixx="0.0014545"
+        ixy="0"
+        ixz="0.0003838"
+        iyy="0.0017157"
+        iyz="0"
+        izz="0.00086925" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_calf.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_calf.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_calf_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.16 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="FR_thigh" />
+    <child
+      link="FR_calf" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5707963268"
+      upper="1.0471975512"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FR_steer">
+    <inertial>
+      <origin
+        xyz="-0.010789 0 -0.038549"
+        rpy="0 0 0" />
+      <mass
+        value="0.4937" />
+      <inertia
+        ixx="0.00032831"
+        ixy="0"
+        ixz="-8.8866E-06"
+        iyy="0.00032683"
+        iyz="0"
+        izz="0.00023698" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_steer_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.033 0 -0.097"
+      rpy="0 0 0" />
+    <parent
+      link="FR_calf" />
+    <child
+      link="FR_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.34907"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FR_trans">
+    <inertial>
+      <origin
+        xyz="-4.1E-05 -8.8E-05 -0.045108"
+        rpy="0 0 0" />
+      <mass
+        value="0.4204" />
+      <inertia
+        ixx="0.00030185"
+        ixy="-4.204E-07"
+        ixz="8.408E-07"
+        iyy="0.00030059"
+        iyz="1.6816E-06"
+        izz="0.00020305" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_trans.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_trans.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_trans_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.00099998 0 -0.09"
+      rpy="0 0 0" />
+    <parent
+      link="FR_steer" />
+    <child
+      link="FR_trans" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FR_wheel">
+    <inertial>
+      <origin
+        xyz="0 0 0.022661"
+        rpy="0 0 0" />
+      <mass
+        value="0.536" />
+      <inertia
+        ixx="0.00073807"
+        ixy="0"
+        ixz="0"
+        iyy="0.00073807"
+        iyz="0"
+        izz="0.0011063" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FR_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FR_wheel_joint_rev"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.083"
+      rpy="0 0 0" />
+    <parent
+      link="FR_trans" />
+    <child
+      link="FR_wheel" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_hip">
+    <inertial>
+      <origin
+        xyz="0.082474 0 0.000806"
+        rpy="0 0 0" />
+      <mass
+        value="1.9015" />
+      <inertia
+        ixx="0.00332"
+        ixy="0"
+        ixz="0.00015402"
+        iyy="0.0066457"
+        iyz="0"
+        izz="0.004961" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_hip.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_hip.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_hip_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.15 0.15 -0.00525"
+      rpy="0 0 0.7854" />
+    <parent
+      link="base_link" />
+    <child
+      link="FL_hip" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.1345"
+      upper="1.1345"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_thigh">
+    <inertial>
+      <origin
+        xyz="0.084796 0 0.004794"
+        rpy="0 0 0" />
+      <mass
+        value="0.6009" />
+      <inertia
+        ixx="0.0013857"
+        ixy="0"
+        ixz="-6.6099E-06"
+        iyy="0.0023339"
+        iyz="0"
+        izz="0.0031649" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_thigh.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_thigh.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_thigh_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.122 -0.0005 0"
+      rpy="0 0 0" />
+    <parent
+      link="FL_hip" />
+    <child
+      link="FL_thigh" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.0472"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_calf">
+    <inertial>
+      <origin
+        xyz="0.020656 0 -0.035012"
+        rpy="0 0 0" />
+      <mass
+        value="0.95" />
+      <inertia
+        ixx="0.0014545"
+        ixy="0"
+        ixz="0.0003838"
+        iyy="0.0017157"
+        iyz="0"
+        izz="0.00086925" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_calf.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_calf.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_calf_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.16 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="FL_thigh" />
+    <child
+      link="FL_calf" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5707963267948966"
+      upper="1.0471975512"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_steer">
+    <inertial>
+      <origin
+        xyz="-0.010789 0 -0.038549"
+        rpy="0 0 0" />
+      <mass
+        value="0.4937" />
+      <inertia
+        ixx="0.00032831"
+        ixy="0"
+        ixz="-8.8866E-06"
+        iyy="0.00032683"
+        iyz="0"
+        izz="0.00023698" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_steer_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.033 0 -0.097"
+      rpy="0 0 0" />
+    <parent
+      link="FL_calf" />
+    <child
+      link="FL_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.3490658503988659"
+      upper="1.5707963267948966"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_trans">
+    <inertial>
+      <origin
+        xyz="-4.1E-05 -8.8E-05 -0.045108"
+        rpy="0 0 0" />
+      <mass
+        value="0.4204" />
+      <inertia
+        ixx="0.00030185"
+        ixy="-4.204E-07"
+        ixz="8.408E-07"
+        iyy="0.00030059"
+        iyz="1.6816E-06"
+        izz="0.00020305" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_trans.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_trans.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_trans_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.00099998 0 -0.09"
+      rpy="0 0 0" />
+    <parent
+      link="FL_steer" />
+    <child
+      link="FL_trans" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="FL_wheel">
+    <inertial>
+      <origin
+        xyz="0 0 0.022661"
+        rpy="0 0 0" />
+      <mass
+        value="0.536" />
+      <inertia
+        ixx="0.00073807"
+        ixy="0"
+        ixz="0"
+        iyy="0.00073807"
+        iyz="0"
+        izz="0.0011063" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/FL_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="FL_wheel_joint_con"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.083"
+      rpy="0 0 0" />
+    <parent
+      link="FL_trans" />
+    <child
+      link="FL_wheel" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_hip">
+    <inertial>
+      <origin
+        xyz="0.082474 0 0.000806"
+        rpy="0 0 0" />
+      <mass
+        value="1.9015" />
+      <inertia
+        ixx="0.00332"
+        ixy="0"
+        ixz="0.00015402"
+        iyy="0.0066457"
+        iyz="0"
+        izz="0.004961" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_hip.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_hip.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_hip_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.15 0.15 -0.00525"
+      rpy="0 0 2.3562" />
+    <parent
+      link="base_link" />
+    <child
+      link="RL_hip" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.1345"
+      upper="1.1345"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_thigh">
+    <inertial>
+      <origin
+        xyz="0.084796 0 0.004794"
+        rpy="0 0 0" />
+      <mass
+        value="0.6009" />
+      <inertia
+        ixx="0.0013857"
+        ixy="0"
+        ixz="-6.6099E-06"
+        iyy="0.0023339"
+        iyz="0"
+        izz="0.0031649" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_thigh.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_thigh.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_thigh_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.122 -0.0005 0"
+      rpy="0 0 0" />
+    <parent
+      link="RL_hip" />
+    <child
+      link="RL_thigh" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.0472"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_calf">
+    <inertial>
+      <origin
+        xyz="0.020656 0 -0.035012"
+        rpy="0 0 0" />
+      <mass
+        value="0.95" />
+      <inertia
+        ixx="0.0014545"
+        ixy="0"
+        ixz="0.0003838"
+        iyy="0.0017157"
+        iyz="0"
+        izz="0.00086925" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_calf.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_calf.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_calf_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.16 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="RL_thigh" />
+    <child
+      link="RL_calf" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5707963268 "
+      upper="1.0471975512"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_steer">
+    <inertial>
+      <origin
+        xyz="-0.010789 0 -0.038549"
+        rpy="0 0 0" />
+      <mass
+        value="0.4937" />
+      <inertia
+        ixx="0.00032831"
+        ixy="0"
+        ixz="-8.8866E-06"
+        iyy="0.00032683"
+        iyz="0"
+        izz="0.00023698" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_steer_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.033 0 -0.097"
+      rpy="0 0 0" />
+    <parent
+      link="RL_calf" />
+    <child
+      link="RL_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.34907"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_trans">
+    <inertial>
+      <origin
+        xyz="-4.1E-05 -8.8E-05 -0.045108"
+        rpy="0 0 0" />
+      <mass
+        value="0.4204" />
+      <inertia
+        ixx="0.00030185"
+        ixy="-4.204E-07"
+        ixz="8.408E-07"
+        iyy="0.00030059"
+        iyz="1.6816E-06"
+        izz="0.00020305" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_trans.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_trans.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_trans_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.00099998 0 -0.09"
+      rpy="0 0 0" />
+    <parent
+      link="RL_steer" />
+    <child
+      link="RL_trans" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RL_wheel">
+    <inertial>
+      <origin
+        xyz="0 0 0.022661"
+        rpy="0 0 0" />
+      <mass
+        value="0.536" />
+      <inertia
+        ixx="0.00073807"
+        ixy="0"
+        ixz="0"
+        iyy="0.00073807"
+        iyz="0"
+        izz="0.0011063" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RL_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RL_wheel"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.083"
+      rpy="0 0 0" />
+    <parent
+      link="RL_trans" />
+    <child
+      link="RL_wheel" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_hip">
+    <inertial>
+      <origin
+        xyz="0.082474 0 0.000806"
+        rpy="0 0 0" />
+      <mass
+        value="1.9015" />
+      <inertia
+        ixx="0.00332"
+        ixy="0"
+        ixz="0.00015402"
+        iyy="0.0066457"
+        iyz="0"
+        izz="0.004961" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_hip.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_hip.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_hip_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.15 -0.15 -0.00525"
+      rpy="0 0 -2.3562" />
+    <parent
+      link="base_link" />
+    <child
+      link="RR_hip" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.1345"
+      upper="1.1345"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_thigh">
+    <inertial>
+      <origin
+        xyz="0.084796 0 0.004794"
+        rpy="0 0 0" />
+      <mass
+        value="0.6009" />
+      <inertia
+        ixx="0.0013857"
+        ixy="0"
+        ixz="-6.6099E-06"
+        iyy="0.0023339"
+        iyz="0"
+        izz="0.0031649" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_thigh.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_thigh.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_thigh_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.122 -0.0005 0"
+      rpy="0 0 0" />
+    <parent
+      link="RR_hip" />
+    <child
+      link="RR_thigh" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.0472"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_calf">
+    <inertial>
+      <origin
+        xyz="0.020656 0 -0.035012"
+        rpy="0 0 0" />
+      <mass
+        value="0.95" />
+      <inertia
+        ixx="0.0014545"
+        ixy="0"
+        ixz="0.0003838"
+        iyy="0.0017157"
+        iyz="0"
+        izz="0.00086925" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_calf.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_calf.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_calf_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.16 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="RR_thigh" />
+    <child
+      link="RR_calf" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5707963268"
+      upper="1.0471975512"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_steer">
+    <inertial>
+      <origin
+        xyz="-0.010789 0 -0.038549"
+        rpy="0 0 0" />
+      <mass
+        value="0.4937" />
+      <inertia
+        ixx="0.00032831"
+        ixy="0"
+        ixz="-8.8866E-06"
+        iyy="0.00032683"
+        iyz="0"
+        izz="0.00023698" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_steer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_steer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_steer_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.033 0 -0.097"
+      rpy="0 0 0" />
+    <parent
+      link="RR_calf" />
+    <child
+      link="RR_steer" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.34907"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_trans">
+    <inertial>
+      <origin
+        xyz="-4.1E-05 -8.8E-05 -0.045108"
+        rpy="0 0 0" />
+      <mass
+        value="0.4204" />
+      <inertia
+        ixx="0.00030185"
+        ixy="-4.204E-07"
+        ixz="8.408E-07"
+        iyy="0.00030059"
+        iyz="1.6816E-06"
+        izz="0.00020305" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_trans.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_trans.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_trans_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.00099998 0 -0.09"
+      rpy="0 0 0" />
+    <parent
+      link="RR_steer" />
+    <child
+      link="RR_trans" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="RR_wheel">
+    <inertial>
+      <origin
+        xyz="0 0 0.022661"
+        rpy="0 0 0" />
+      <mass
+        value="0.536" />
+      <inertia
+        ixx="0.00073807"
+        ixy="0"
+        ixz="0"
+        iyy="0.00073807"
+        iyz="0"
+        izz="0.0011063" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/RR_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="RR_wheel_joint_con"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.083"
+      rpy="0 0 0" />
+    <parent
+      link="RR_trans" />
+    <child
+      link="RR_wheel" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="base">
+    <inertial>
+      <origin
+        xyz="0 0 -0.032125"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.000547"
+        ixy="0"
+        ixz="0"
+        iyy="0.000547"
+        iyz="0"
+        izz="0.000406" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/base.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/base.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="base_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.07991 0 0.11325"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="base" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.7925"
+      upper="2.7925"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="shoulder">
+    <inertial>
+      <origin
+        xyz="0 0 0.141292"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.011053"
+        ixy="0"
+        ixz="0"
+        iyy="0.010549"
+        iyz="0"
+        izz="0.000943" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/shoulder.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/shoulder.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0 0 0.037"
+      rpy="0 0 0" />
+    <parent
+      link="base" />
+    <child
+      link="shoulder" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="elbow">
+    <inertial>
+      <origin
+        xyz="-0.070669 0 0.058268"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.001655"
+        ixy="0"
+        ixz="0.000441"
+        iyy="0.001415"
+        iyz="0"
+        izz="0.00138" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/elbow.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="elbow_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0 0 0.3"
+      rpy="0 0 0" />
+    <parent
+      link="shoulder" />
+    <child
+      link="elbow" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-0.17453"
+      upper="3.1416"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="wrist_1">
+    <inertial>
+      <origin
+        xyz="0 0.000476 0.090862"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.003103"
+        ixy="0"
+        ixz="-6E-06"
+        iyy="0.003102"
+        iyz="0"
+        izz="0.000304" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_1_joint_rev"
+    type="revolute">
+    <origin
+      xyz="-0.08 0 0.104"
+      rpy="0 0 0.044005" />
+    <parent
+      link="elbow" />
+    <child
+      link="wrist_1" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.7925"
+      upper="2.7925"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="wrist_2">
+    <inertial>
+      <origin
+        xyz="-4.8E-05 0.004563 0.060727"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.000736"
+        ixy="0"
+        ixz="1E-06"
+        iyy="0.000627"
+        iyz="-3.3E-05"
+        izz="0.000506" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_2_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0.00034884 0.0039848 0.154"
+      rpy="0 0 -0.087322" />
+    <parent
+      link="wrist_1" />
+    <child
+      link="wrist_2" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="wrist_3">
+    <inertial>
+      <origin
+        xyz="0 0 0.02775"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.00046"
+        ixy="0"
+        ixz="0"
+        iyy="0.00123"
+        iyz="0.000118"
+        izz="0.000406" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/wrist_3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_3_joint_rev"
+    type="revolute">
+    <origin
+      xyz="0 -0.004 0.089"
+      rpy="0 0 0" />
+    <parent
+      link="wrist_2" />
+    <child
+      link="wrist_3" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.7925"
+      upper="2.7925"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="gripper">
+    <inertial>
+      <origin
+        xyz="5E-06 -8E-05 0.017731"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.001591"
+        ixy="0"
+        ixz="0"
+        iyy="0.000322"
+        iyz="0"
+        izz="0.001423" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.29804 0.29804 0.29804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://白模总装6.SLDASM/meshes/gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_joint_fix"
+    type="fixed">
+    <origin
+      xyz="0 0 0.059"
+      rpy="0 0 0.01974" />
+    <parent
+      link="wrist_3" />
+    <child
+      link="gripper" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>

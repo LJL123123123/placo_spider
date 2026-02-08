@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<mujoco model="spider_sldasm">
+  <compiler angle="radian" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <asset>
+    <!-- Meshes referenced in URDF (absolute paths copied from URDF) -->
+    <mesh name="base_link" file="../meshes/base_link.STL"/>
+    <mesh name="Link1-1" file="../meshes/Link1-1.STL"/>
+    <mesh name="Link1-2" file="../meshes/Link1-2.STL"/>
+    <mesh name="Link1-3" file="../meshes/Link1-3.STL"/>
+    <mesh name="Link1-4" file="../meshes/Link1-4.STL"/>
+    <mesh name="Link1-5" file="../meshes/Link1-5.STL"/>
+    <mesh name="Link1-6" file="../meshes/Link1-6.STL"/>
+    <mesh name="Link2-1" file="../meshes/Link2-1.STL"/>
+    <mesh name="Link2-2" file="../meshes/Link2-2.STL"/>
+    <mesh name="Link2-3" file="../meshes/Link2-3.STL"/>
+    <mesh name="Link2-4" file="../meshes/Link2-4.STL"/>
+    <mesh name="Link2-5" file="../meshes/Link2-5.STL"/>
+    <mesh name="Link2-6" file="../meshes/Link2-6.STL"/>
+    <mesh name="Link3-1" file="../meshes/Link3-1.STL"/>
+    <mesh name="Link3-2" file="../meshes/Link3-2.STL"/>
+    <mesh name="Link3-3" file="../meshes/Link3-3.STL"/>
+    <mesh name="Link3-4" file="../meshes/Link3-4.STL"/>
+    <mesh name="Link3-5" file="../meshes/Link3-5.STL"/>
+    <mesh name="Link3-6" file="../meshes/Link3-6.STL"/>
+    <mesh name="Link4-1" file="../meshes/Link4-1.STL"/>
+    <mesh name="Link4-2" file="../meshes/Link4-2.STL"/>
+    <mesh name="Link4-3" file="../meshes/Link4-3.STL"/>
+    <mesh name="Link4-4" file="../meshes/Link4-4.STL"/>
+    <mesh name="Link4-5" file="../meshes/Link4-5.STL"/>
+    <mesh name="Link4-6" file="../meshes/Link4-6.STL"/>
+  </asset>
+
+  <default>
+    <joint armature="0" damping="0.1" stiffness="0"/>
+    <geom contype="1" conaffinity="1" friction="0.7 .1 .1" density="1000"/>
+  </default>
+
+  <worldbody>
+    <!-- Base body -->
+    <body name="base_link" pos="0 0 0.19287" euler="0 0 0">
+    <joint name="root" type="free" />
+    <inertial pos="0 0 0" mass="2.0" diaginertia="0.0740610072049505 0.0740610072049504 0.140190829063453"/>
+      <geom type="mesh" mesh="base_link" name="geom_base" contype="1" conaffinity="1"/>
+
+      <!-- Leg 1 chain -->
+      <body name="Link1-1" pos="0.15 -0.15 0.0616299999999999" euler="0 0 0.785398163397447">
+      <inertial pos="0 0 0" mass="0.60284248189571" diaginertia="0.00210602160556376 0.00105493812743913 0.00156945455541681"/>
+        <joint name="Joint1-1" type="hinge" axis="0 0 -1"/>
+        <geom type="mesh" mesh="Link1-1"/>
+
+        <body name="Link1-2" pos="-0.000499999999999893 -0.122 0" euler="0 1.5707963267949 0">
+          <inertial pos="0 0 0" mass="0.28929926430132" diaginertia="0.00152383905464937 0.000667153490245799 0.0011236331918339"/>
+          <joint name="Joint1-2" type="hinge" axis="0 0 1"/>
+          <geom type="mesh" mesh="Link1-2"/>
+
+          <body name="Link1-3" pos="0 -0.16 0" euler="0 0 -3.14159265358979">
+            <inertial pos="0 0 0" mass="0.308599743887214" diaginertia="0.000308593278300975 0.00028646456343213 0.000370142068779215"/>
+            <joint name="Joint1-3" type="hinge" axis="0 0 -1"/>
+            <geom type="mesh" mesh="Link1-3"/>
+
+            <body name="Link1-4" pos="-0.0980000000000001 0.0330000000000001 0" euler="0 1.5707963267949 0">
+              <inertial pos="0 0 0" mass="0.202208844102152" diaginertia="0.000133800346594459 0.000134543569387916 9.70688132526932E-05"/>
+              <!-- <joint name="Joint1-4" type="weld"/> -->
+              <geom type="mesh" mesh="Link1-4"/>
+
+              <body name="Link1-5" pos="0 -0.000999979603148238 -0.0869999940509131" euler="0 -1.5707963267949 0">
+                <inertial pos="0 0 0" mass="0.172400029670848" diaginertia="9.58040310067531E-05 9.1862619595287E-05 8.93978244481122E-05"/>
+                <!-- <joint name="Joint1-5" type="weld"/> -->
+                <geom type="mesh" mesh="Link1-5"/>
+
+                <body name="Link1-6" pos="-0.0695 0 0" euler="0 1.5708 0">
+                  <inertial pos="0 0 0" mass="0.385234192705995" diaginertia="0.000490900876230675 0.000490900876230675 0.000769296861776585"/>
+                  <!-- <joint name="Joint1-6" type="weld"/> -->
+                  <geom type="mesh" mesh="Link1-6"/>
+
+                  <body name="Link1-7" pos="0 0 0.173">
+                    <inertial pos="0 0 0" mass="0.0" diaginertia="0 0 0"/>
+                    <!-- <joint name="Joint1-7" type="weld"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- Leg 2 chain (mirror of leg1 with URDF origins) -->
+      <body name="Link2-1" pos="0.15 0.15 0.0616299999999999" euler="0 0 2.35619449019235">
+  <inertial pos="0 0 0" mass="0.602842481895709" diaginertia="0.00210602160556376 0.00105493812743913 0.00156945455541681"/>
+  <joint name="Joint2-1" type="hinge" axis="0 0 -1"/>
+        <geom type="mesh" mesh="Link2-1"/>
+
+        <body name="Link2-2" pos="-0.000500000000000117 -0.121999999999999 0" euler="0 1.5707963267949 3.06">
+          <inertial pos="0 0 0" mass="0.28929926430132" diaginertia="0.00152383905464937 0.0006671534902458 0.0011236331918339"/>
+          <joint name="Joint2-2" type="hinge" axis="0 0 1"/>
+          <geom type="mesh" mesh="Link2-2"/>
+
+          <body name="Link2-3" pos="0 0.16 0" euler="0 0 0">
+            <inertial pos="0 0 0" mass="0.308599743887213" diaginertia="0.000308593278300975 0.000286464563432129 0.000370142068779214"/>
+            <joint name="Joint2-3" type="hinge" axis="0 0 -1"/>
+            <geom type="mesh" mesh="Link2-3"/>
+
+            <body name="Link2-4" pos="-0.098 0.033 0" euler="0 1.5707963267949 0">
+              <inertial pos="0 0 0" mass="0.202208844102152" diaginertia="0.000133800346594459 0.000134543569387916 9.70688132526931E-05"/>
+              <!-- <joint name="Joint3-4" type="weld"/> -->
+              <geom type="mesh" mesh="Link2-4"/>
+
+              <body name="Link2-5" pos="0 -0.000999979603148349 -0.0869999940509131" euler="0 -1.5707963267949 0">
+                <inertial pos="0 0 0" mass="0.172400029670848" diaginertia="9.58040310067532E-05 9.18626195952871E-05 8.93978244481122E-05"/>
+                <!-- <joint name="Joint3-5" type="weld"/> -->
+                <geom type="mesh" mesh="Link2-5"/>
+
+                <body name="Link2-6" pos="-0.0695 0 0" euler="0 1.5708 0">
+                  <inertial pos="0 0 0" mass="0.385234192705996" diaginertia="0.000490900876230676 0.000490900876230676 0.000769296861776585"/>
+                  <!-- <joint name="Joint3-6" type="weld"/> -->
+                  <geom type="mesh" mesh="Link2-6"/>
+
+                  <body name="Link2-7" pos="0 0 0.173">
+                    <inertial pos="0 0 0" mass="0.0" diaginertia="0 0 0"/>
+                    <!-- <joint name="Joint2-7" type="weld"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- Leg 3 chain -->
+      <body name="Link3-1" pos="-0.150000000000001 0.15 0.0616299999999999" euler="0 0 -2.35619449019235">
+  <inertial pos="0 0 0" mass="0.602842481895709" diaginertia="0.00210602160556376 0.00105493812743913 0.0015694545554168"/>
+  <joint name="Joint3-1" type="hinge" axis="0 0 -1"/>
+        <geom type="mesh" mesh="Link3-1"/>
+
+        <body name="Link3-2" pos="-0.000500000000000117 -0.121999999999999 0" euler="0 1.5707963267949 0">
+          <inertial pos="0 0 0" mass="0.28929926430132" diaginertia="0.00152383905464937 0.0006671534902458 0.0011236331918339"/>
+          <joint name="Joint3-2" type="hinge" axis="0 0 1"/>
+          <geom type="mesh" mesh="Link3-2"/>
+
+          <body name="Link3-3" pos="0 -0.16 0" euler="0 0 3.14159265358979">
+            <inertial pos="0 0 0" mass="0.308599743887213" diaginertia="0.000308593278300975 0.000286464563432129 0.000370142068779214"/>
+            <joint name="Joint3-3" type="hinge" axis="0 0 -1"/>
+            <geom type="mesh" mesh="Link3-3"/>
+
+            <body name="Link3-4" pos="-0.098 0.033 0" euler="0 1.5707963267949 0">
+              <inertial pos="0 0 0" mass="0.202208844102152" diaginertia="0.000133800346594459 0.000134543569387916 9.70688132526931E-05"/>
+              <!-- <joint name="Joint3-4" type="weld"/> -->
+              <geom type="mesh" mesh="Link3-4"/>
+
+              <body name="Link3-5" pos="0 -0.000999979603148349 -0.0869999940509131" euler="0 -1.5707963267949 0">
+                <inertial pos="0 0 0" mass="0.172400029670848" diaginertia="9.58040310067532E-05 9.18626195952871E-05 8.93978244481122E-05"/>
+                <!-- <joint name="Joint3-5" type="weld"/> -->
+                <geom type="mesh" mesh="Link3-5"/>
+
+                <body name="Link3-6" pos="-0.0695 0 0" euler="0 1.5708 0">
+                  <inertial pos="0 0 0" mass="0.385234192705996" diaginertia="0.000490900876230676 0.000490900876230676 0.000769296861776585"/>
+                  <!-- <joint name="Joint3-6" type="weld"/> -->
+                  <geom type="mesh" mesh="Link3-6"/>
+
+                  <body name="Link3-7" pos="0 0 0.173">
+                    <inertial pos="0 0 0" mass="0.0" diaginertia="0 0 0"/>
+                    <!-- <joint name="Joint3-7" type="weld"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- Leg 4 chain -->
+      <body name="Link4-1" pos="-0.15 -0.15 0.0616299999999999" euler="0 0 -0.785398163397446">
+        <inertial pos="0 0 0" mass="0.60284248189571" diaginertia="0.00210602160556376 0.00105493812743913 0.00156945455541681"/>
+  <joint name="Joint4-1" type="hinge" axis="0 0 -1"/>
+        <geom type="mesh" mesh="Link4-1"/>
+
+        <body name="Link4-2" pos="-0.000499999999999957 -0.122 0" euler="0 1.5707963267949 0">
+          <inertial pos="0 0 0" mass="0.289299264301321" diaginertia="0.00152383905464937 0.0006671534902458 0.0011236331918339"/>
+          <joint name="Joint4-2" type="hinge" axis="0 0 1"/>
+          <geom type="mesh" mesh="Link4-2"/>
+
+          <body name="Link4-3" pos="0 -0.16 0" euler="0 0 -3.10297210055977">
+            <inertial pos="0 0 0" mass="0.308599743887214" diaginertia="0.000308593278300976 0.00028646456343213 0.000370142068779215"/>
+            <joint name="Joint4-3" type="hinge" axis="0 0 -1"/>
+            <geom type="mesh" mesh="Link4-3"/>
+
+            <body name="Link4-4" pos="-0.0980000000000001 0.0330000000000001 0" euler="-1.0873493252277 1.57079631189374 -1.03242181344867">
+              <inertial pos="0 0 0" mass="0.202208844102152" diaginertia="0.000133800346594459 0.000134543569387916 9.70688132526932E-05"/>
+              <!-- <joint name="Joint4-4" type="weld"/> -->
+              <geom type="mesh" mesh="Link4-4"/>
+
+              <body name="Link4-5" pos="0 -0.000999979603148349 -0.086999994050913" euler="-1.5707963267949 -1.53217577376487 -1.5707963267949">
+                <inertial pos="0 0 0" mass="0.172400029670848" diaginertia="9.58040310067531E-05 9.1862619595287E-05 8.93978244481121E-05"/>
+                <!-- <joint name="Joint4-5" type="weld"/> -->
+                <geom type="mesh" mesh="Link4-5"/>
+
+                <body name="Link4-6" pos="-0.0695 0 0" euler="0 1.5708 0">
+                  <inertial pos="0 0 0" mass="0.385234192705995" diaginertia="0.000490900876230676 0.000490900876230676 0.000769296861776584"/>
+                  <!-- <joint name="Joint4-6" type="weld"/> -->
+                  <geom type="mesh" mesh="Link4-6"/>
+
+                  <body name="Link4-7" pos="0 0 0.173">
+                    <inertial pos="0 0 0" mass="0.0" diaginertia="0 0 0"/>
+                    <!-- <joint name="Joint4-7" type="weld"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+    </body>
+  </worldbody>
+
+  <!-- Actuator placeholders: add motors for revolute joints if needed -->
+  <actuator>
+    <!-- Example: position actuators for hinge joints -->
+    <motor name="m_Joint1_1" joint="Joint1-1" gear="1"/>
+    <motor name="m_Joint1_2" joint="Joint1-2" gear="1"/>
+    <motor name="m_Joint1_3" joint="Joint1-3" gear="1"/>
+    <motor name="m_Joint2_1" joint="Joint2-1" gear="1"/>
+    <motor name="m_Joint2_2" joint="Joint2-2" gear="1"/>
+    <motor name="m_Joint2_3" joint="Joint2-3" gear="1"/>
+    <motor name="m_Joint3_1" joint="Joint3-1" gear="1"/>
+    <motor name="m_Joint3_2" joint="Joint3-2" gear="1"/>
+    <motor name="m_Joint3_3" joint="Joint3-3" gear="1"/>
+    <motor name="m_Joint4_1" joint="Joint4-1" gear="1"/>
+    <motor name="m_Joint4_2" joint="Joint4-2" gear="1"/>
+    <motor name="m_Joint4_3" joint="Joint4-3" gear="1"/>
+  </actuator>
+
+</mujoco>

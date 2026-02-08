@@ -12,7 +12,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--xml",
         type=str,
-        default="../spider_sldasm/urdf/scene.xml",
+        default="../spider_SLDASM_2m6d/urdf/scene.xml",
         help="MuJoCo MJCF XML path",
     )
     p.add_argument(
@@ -66,9 +66,10 @@ def main() -> None:
     def step_once() -> None:
         # 1) read CPG command
         try:
-            qpos_desired, kp_raw, kd_raw, cpg_timestamp = cpg_to_sim.read()
+            qpos_desired, ctrl_desired, kp_raw, kd_raw, cpg_timestamp = cpg_to_sim.read()
         except Exception:
             qpos_desired = initial_qpos
+            ctrl_desired = np.zeros(12, dtype=np.float64)
             kp_raw = 0.0
             kd_raw = 0.0
             cpg_timestamp = 0.0
@@ -79,21 +80,30 @@ def main() -> None:
 
         # 3) sanitize target qpos
         qd = np.asarray(qpos_desired, dtype=np.float64).reshape(-1)
+        tau_desired = np.asarray(ctrl_desired, dtype=np.float64).reshape(-1)
         if qd.size == model.nq:
             target_qpos = qd
+            target_ctrl = tau_desired
         elif qd.size == model.nu:
             # 只给了受控关节目标：塞到最后 nu 个关节
             target_qpos = data.qpos.copy()
             target_qpos[model.nq - model.nu : model.nq] = qd
+            target_ctrl = tau_desired
         else:
             # 尺寸不匹配：退回初始姿态，避免崩
             target_qpos = initial_qpos
+            target_ctrl = np.zeros(model.nu, dtype=np.float64)
 
         # 4) PD control -> data.ctrl
+        # data.ctrl[:] = data.qfrc_gravcomp[6:]  # gravity compensation for all joints\
         for a in range(model.nu):
             qidx = model.nq - model.nu + a
             vidx = model.nv - model.nu + a
-            data.ctrl[a] = kp[a] * (target_qpos[qidx] - data.qpos[qidx]) - kd[a] * data.qvel[vidx]
+            data.ctrl[a] = kp[a] * (target_qpos[qidx] - data.qpos[qidx]) - kd[a] * data.qvel[vidx] + target_ctrl[a]
+            if data.ctrl[a] > 50.:
+                data.ctrl[a] = 50.
+            elif data.ctrl[a] < -50.:
+                data.ctrl[a] = -50.
 
         # 5) step physics
         mujoco.mj_step(model, data)
