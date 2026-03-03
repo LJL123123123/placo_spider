@@ -1,0 +1,8 @@
+conda create -n deploy -c conda-forge python=3.11 pinocchio coal eigenpy doxystub eiquadprog
+
+cd /home/zenbot-ljl/placo
+mkdir build && cd build 
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" 
+make -j4 && make install
+cd ..
+cp -r src/placo $CONDA_PREFIX/include/

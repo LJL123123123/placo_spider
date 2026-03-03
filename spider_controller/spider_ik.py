@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple, List
 import os
 import math
@@ -27,7 +27,7 @@ import numpy as np
 from gait_manager import GaitCycleManager, GaitParams
 from spider_logger import SpiderCsvLogger
 from spider_visual import SpiderVisualizer
-from compensation import Compensation
+# from compensation import Compensation
 from spider_comp import SpiderCompensation
 
 ALL_LEGS = ['LF', 'RF', 'LH', 'RH']
@@ -92,17 +92,17 @@ class SpiderIkConfig:
 
 @dataclass
 class SpiderIkData:
-    q: np.ndarray = np.zeros(19, dtype=np.float64)
-    qd: np.ndarray = np.zeros(19, dtype=np.float64)
-    qdd: np.ndarray = np.zeros(19, dtype=np.float64)
-    ctrl: np.ndarray = np.zeros(12, dtype=np.float64)
+    q: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    qd: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    qdd: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    ctrl: np.ndarray = field(default_factory=lambda: np.zeros(12, dtype=np.float64))
 
 @dataclass
 class MeasuredData:
-    q: np.ndarray = np.zeros(19, dtype=np.float64)
-    qd: np.ndarray = np.zeros(19, dtype=np.float64)
-    qdd: np.ndarray = np.zeros(19, dtype=np.float64)
-    ctrl: np.ndarray = np.zeros(12, dtype=np.float64)
+    q: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    qd: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    qdd: np.ndarray = field(default_factory=lambda: np.zeros(19, dtype=np.float64))
+    ctrl: np.ndarray = field(default_factory=lambda: np.zeros(12, dtype=np.float64))
 
 class SpiderIK:
     def __init__(self, cfg: SpiderIkConfig):
