@@ -191,6 +191,35 @@ class SimToCPGData:
     # 添加新的传感器数据
     imu_data: np.ndarray = field(default_factory=lambda: np.zeros(6))
 ```
+### 26.3.14 添加shm_to_plotjuggler_udp
+Usage：
+
+### 26.3.16 更换 urdf 为 sqr_description
+#### 区别
+0位 && 默认姿态
+##### robot.urdf修改
+1.`*ankle*joint & *wheel_joint `改成了`fixed`
+2.`RR_ankle_roll_joint & RF_ankle_roll_joint` 改成了 `rpy="1.57 0 0"`；`LR_ankle_roll_joint & LF_ankle_roll_joint` 改成了 `rpy="-1.57 0 0"`
+
+##### 控制修改
+1.将`leg_orien_tasks`的`add_cone_constraint`换成`add_axisalign_task（"frame-name", array_at_frame, world_target_array）`
+```
+add_axisalign_task
+硬任务会强制误差趋近于0，可能导致求解失败如果约束不可满足
+软任务的权重是相对值，需要根据系统中其他任务的权重来平衡
+可以通过 solver.dump_status() 查看所有任务的实时误差状态 solver_status.rst:46-48
+误差计算基于轴线的角度偏差，使用弧度作为单位
+```
+2.`class SpiderIkConfig:`中添加
+```
+leg_init_state: np.ndarray = field(default_factory=lambda: np.array([
+            0,0,0.26,
+            0,0,0,1,
+            0.7899997871565971,0.01658366118250419,-0.004088938263042,
+            -0.7867905831961373,-0.016585433996785828,0.004100463013502682,
+            -0.7867905831961349,0.016585433996786143,-0.00410046301350216,
+            0.7899997871565964,-0.016583661182505084,0.004088938263039494]))
+```
 
 ### 调试技巧
 

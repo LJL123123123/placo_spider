@@ -54,9 +54,9 @@ class Keyboard:
         self.press_timeout = 0.18
 
         # speed params
-        self.speed_forward = 0.1
-        self.speed_lateral = 0.1
-        self.yaw_speed = 0.2
+        self.speed_forward = 0.05
+        self.speed_lateral = 0.05
+        self.yaw_speed = 0.1
         self.height_speed = 0.05
 
     def restore(self):

@@ -73,7 +73,7 @@ class SpiderIkConfig:
 
     # solver weights
     leg_task_weight: float = 1e3
-    leg_task_ori_weight: float = 1e2
+    leg_task_ori_weight: float = 1e1
     body_task_weight: float = 1e1
     body_task_ori_weight: float = 1e2
     com_constraint_weight: float = 1e1
@@ -82,13 +82,20 @@ class SpiderIkConfig:
 
     # URDF root candidates
     body_height: float = 0.26
-    urdf_candidates: Tuple[str, ...] = ("../spider_SLDASM_2m6d/urdf",)
+    urdf_candidates: Tuple[str, ...] = ("../sqr_description/urdf",)
     # urdf_candidates: Tuple[str, ...] = ("../spider_sldasm/urdf",)
     
     # control filter parameters
     enable_ctrl_filter: bool = True
     ctrl_filter_alpha: float = 0.8  # 滤波系数，0-1之间，越大越平滑
     ctrl_max: float = 50.0
+    leg_init_state: np.ndarray = field(default_factory=lambda: np.array([
+            0,0,0.26,
+            0,0,0,1,
+            0.7899997871565971,0.01658366118250419,-0.004088938263042,
+            -0.7867905831961373,-0.016585433996785828,0.004100463013502682,
+            -0.7867905831961349,0.016585433996786143,-0.00410046301350216,
+            0.7899997871565964,-0.016583661182505084,0.004088938263039494]))
 
 @dataclass
 class SpiderIkData:
@@ -134,6 +141,7 @@ class SpiderIK:
             raise FileNotFoundError(f"URDF root not found in candidates: {self.cfg.urdf_candidates}")
 
         self.robot = self.placo.RobotWrapper(self.urdf_root, self.placo.Flags.ignore_collisions)
+        self.robot.state.q = self.cfg.leg_init_state.copy()
         # print joint order for debugging / inspection
         joint_names = None
         try:
@@ -194,17 +202,12 @@ class SpiderIK:
 
         # frames mapping
         self.leg_foot_name_map = {
-            'LH': 'RL_wheel',
-            'RH': 'RR_wheel',
-            'RF': 'FR_wheel',
-            'LF': 'FL_wheel',
+            'LH': 'LR_wheel_link',
+            'RH': 'RR_wheel_link',
+            'RF': 'RF_wheel_link',
+            'LF': 'LF_wheel_link',
         }
-        # self.leg_foot_name_map = {
-        #     'LH': 'Link3-6',
-        #     'RH': 'Link4-6',
-        #     'RF': 'Link1-6',
-        #     'LF': 'Link2-6',
-        # }
+        
         self.leg_foot_joint_map = {
             'LH': [6,7,8],
             'RH': [9,10,11],
@@ -222,9 +225,15 @@ class SpiderIK:
             leg: self.solver.add_position_task(self.leg_foot_name_map[leg], np.array(self.target_pos[leg]))
             for leg in ALL_LEGS
         }
+        # self.leg_orien_tasks = {
+        #     leg: self.solver.add_axisalign_task(self.leg_foot_name_map[leg], np.array([0, 1, 0]), np.array([0, 0, 1]))
+        #     for leg in ALL_LEGS
+        # }
         self.leg_orien_tasks = {
-            leg: self.solver.add_cone_constraint(self.leg_foot_name_map[leg], "base_link", self.cfg.alpha_max)
-            for leg in ALL_LEGS
+            'LH': self.solver.add_axisalign_task(self.leg_foot_name_map['LH'], np.array([0, 1, 0]), np.array([0, 0, -1])),
+            'RH': self.solver.add_axisalign_task(self.leg_foot_name_map['RH'], np.array([0, -1, 0]), np.array([0, 0, -1])),
+            'RF': self.solver.add_axisalign_task(self.leg_foot_name_map['RF'], np.array([0, -1, 0]), np.array([0, 0, -1])),
+            'LF': self.solver.add_axisalign_task(self.leg_foot_name_map['LF'], np.array([0, 1, 0]), np.array([0, 0, -1])),
         }
         for leg in ALL_LEGS:
             self.leg_tasks[leg].configure(self.leg_foot_name_map[leg], 'soft', float(self.cfg.leg_task_weight))
@@ -364,6 +373,13 @@ class SpiderIK:
                 filename='com_target_data.csv',
                 header=['t', 'x', 'y', 'z'],
                 row=[self.t, float(plan.target_pos['com'][0]), float(plan.target_pos['com'][1]), float(plan.target_pos['com'][2])],
+            )
+
+            self.logger.write_row(
+                name='robot_state',
+                filename='robot_state_data.csv',
+                header=['t'] +[f'q_{i}' for i in range(len(self.data.q))],
+                row=[self.t] + [float(q) for q in self.data.q],
             )
 
             p = plan.target_pos["LH"]
