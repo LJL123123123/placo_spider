@@ -76,7 +76,7 @@ class SpiderIkConfig:
     leg_task_ori_weight: float = 1e2
     body_task_weight: float = 1e1
     body_task_ori_weight: float = 1e2
-    com_constraint_weight: float = 1e2+1
+    com_constraint_weight: float = 1e1
 
     alpha_max: float = 0.1  # 弧度，约 28.6 度
 
