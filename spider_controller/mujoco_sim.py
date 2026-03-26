@@ -48,11 +48,10 @@ def main() -> None:
 
     # Shared memory
     sim_to_cpg = SimToCPGData(create=True)
-    cpg_to_sim = CPGToSimData(create=True)
+    cpg_to_sim = CPGToSimData(create=False)
 
     atexit.register(lambda: sim_to_cpg.close())
     atexit.register(lambda: sim_to_cpg.unlink())
-    atexit.register(lambda: cpg_to_sim.close())
     # 不在这里 unlink cpg_to_sim，让 CPG 端负责
 
     mujoco.mj_forward(model, data)

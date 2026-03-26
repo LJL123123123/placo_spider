@@ -73,16 +73,16 @@ class SpiderIkConfig:
 
     # solver weights
     leg_task_weight: float = 1e3
-    leg_task_ori_weight: float = 1e1
+    leg_task_ori_weight: float = 1e1+50
     body_task_weight: float = 1e1
     body_task_ori_weight: float = 1e2
-    com_constraint_weight: float = 1e1
+    com_constraint_weight: float = 1e2+50
 
     alpha_max: float = 0.1  # 弧度，约 28.6 度
 
     # URDF root candidates
     body_height: float = 0.26
-    urdf_candidates: Tuple[str, ...] = ("../sqr_description/urdf",)
+    urdf_candidates: Tuple[str, ...] = ("../sqr_description/sqr_a1_description/urdf/",)
     # urdf_candidates: Tuple[str, ...] = ("../spider_sldasm/urdf",)
     
     # control filter parameters
@@ -225,10 +225,6 @@ class SpiderIK:
             leg: self.solver.add_position_task(self.leg_foot_name_map[leg], np.array(self.target_pos[leg]))
             for leg in ALL_LEGS
         }
-        # self.leg_orien_tasks = {
-        #     leg: self.solver.add_axisalign_task(self.leg_foot_name_map[leg], np.array([0, 1, 0]), np.array([0, 0, 1]))
-        #     for leg in ALL_LEGS
-        # }
         self.leg_orien_tasks = {
             'LH': self.solver.add_axisalign_task(self.leg_foot_name_map['LH'], np.array([0, 1, 0]), np.array([0, 0, -1])),
             'RH': self.solver.add_axisalign_task(self.leg_foot_name_map['RH'], np.array([0, -1, 0]), np.array([0, 0, -1])),
@@ -304,6 +300,136 @@ class SpiderIK:
         # last plan snapshot
         self.last_plan = None
 
+    @staticmethod
+    def _cross2d(a: np.ndarray, b: np.ndarray) -> float:
+        return float(a[0] * b[1] - a[1] * b[0])
+
+    @staticmethod
+    def _polygon_signed_area(polygon: np.ndarray) -> float:
+        poly = np.asarray(polygon, dtype=np.float64)
+        if poly.shape[0] < 3:
+            return 0.0
+        x = poly[:, 0]
+        y = poly[:, 1]
+        return 0.5 * float(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y))
+
+    def _ensure_ccw_polygon(self, polygon: np.ndarray) -> np.ndarray:
+        poly = np.asarray(polygon, dtype=np.float64).reshape(-1, 2)
+        if poly.shape[0] < 3:
+            return poly.copy()
+        if self._polygon_signed_area(poly) < 0.0:
+            poly = poly[::-1].copy()
+        return poly
+
+    def _compute_support_polygon(self, plan) -> Tuple[List[str], np.ndarray]:
+        contacts = [leg for leg, c in plan.contact_state.items() if bool(c)]
+        support_polygon = np.array(
+            [np.asarray(plan.target_pos[leg][0:2], dtype=np.float64) for leg in contacts],
+            dtype=np.float64,
+        ) if len(contacts) > 0 else np.zeros((0, 2), dtype=np.float64)
+        return contacts, self._ensure_ccw_polygon(support_polygon)
+
+    def _project_point_to_segment(self, p: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        ab = b - a
+        denom = float(np.dot(ab, ab))
+        if denom <= 1e-12:
+            return a.copy()
+        t = float(np.dot(p - a, ab) / denom)
+        t = max(0.0, min(1.0, t))
+        return a + t * ab
+
+    def _is_inside_convex_polygon(self, point: np.ndarray, polygon: np.ndarray, tol: float = 1e-9) -> bool:
+        poly = self._ensure_ccw_polygon(polygon)
+        n = poly.shape[0]
+        if n < 3:
+            return False
+        p = np.asarray(point, dtype=np.float64)
+        for i in range(n):
+            a = poly[i]
+            b = poly[(i + 1) % n]
+            if self._cross2d(b - a, p - a) < -tol:
+                return False
+        return True
+
+    def _shrink_support_polygon(self, polygon: np.ndarray, margin: float) -> np.ndarray:
+        poly = self._ensure_ccw_polygon(polygon)
+        n = poly.shape[0]
+        if n < 3 or margin <= 0.0:
+            return poly.copy()
+
+        shrunk = []
+        for i in range(n):
+            prev_pt = poly[(i - 1) % n]
+            curr_pt = poly[i]
+            next_pt = poly[(i + 1) % n]
+
+            e_prev = curr_pt - prev_pt
+            e_next = next_pt - curr_pt
+            len_prev = float(np.linalg.norm(e_prev))
+            len_next = float(np.linalg.norm(e_next))
+            if len_prev <= 1e-9 or len_next <= 1e-9:
+                return poly.copy()
+
+            t_prev = e_prev / len_prev
+            t_next = e_next / len_next
+            n_prev = np.array([-t_prev[1], t_prev[0]], dtype=np.float64)
+            n_next = np.array([-t_next[1], t_next[0]], dtype=np.float64)
+
+            p1 = curr_pt + margin * n_prev
+            p2 = curr_pt + margin * n_next
+            A = np.column_stack((t_prev, -t_next))
+            rhs = p2 - p1
+            try:
+                sol = np.linalg.solve(A, rhs)
+                new_pt = p1 + sol[0] * t_prev
+            except np.linalg.LinAlgError:
+                return poly.copy()
+            shrunk.append(new_pt)
+
+        shrunk = np.asarray(shrunk, dtype=np.float64)
+        if abs(self._polygon_signed_area(shrunk)) < 1e-10:
+            return poly.copy()
+        return shrunk
+
+    def _project_point_to_convex_polygon(self, point: np.ndarray, polygon: np.ndarray) -> np.ndarray:
+        poly = self._ensure_ccw_polygon(polygon)
+        p = np.asarray(point, dtype=np.float64)
+        n = poly.shape[0]
+        if n == 0:
+            return p.copy()
+        if n == 1:
+            return poly[0].copy()
+        if n == 2:
+            return self._project_point_to_segment(p, poly[0], poly[1])
+        if self._is_inside_convex_polygon(p, poly):
+            return p.copy()
+
+        best = None
+        best_dist2 = float('inf')
+        for i in range(n):
+            a = poly[i]
+            b = poly[(i + 1) % n]
+            cand = self._project_point_to_segment(p, a, b)
+            dist2 = float(np.sum((cand - p) ** 2))
+            if dist2 < best_dist2:
+                best_dist2 = dist2
+                best = cand
+        return best if best is not None else p.copy()
+
+    def _compute_projected_com_target(self, com_nominal: np.ndarray, support_polygon: np.ndarray) -> np.ndarray:
+        com_exec = np.asarray(com_nominal, dtype=np.float64).copy()
+        if support_polygon.shape[0] < 3:
+            return com_exec
+
+        shrunk_polygon = self._shrink_support_polygon(support_polygon, float(self.cfg.polygon_margin))
+        if shrunk_polygon.shape[0] >= 3 and abs(self._polygon_signed_area(shrunk_polygon)) > 1e-10:
+            polygon_for_projection = shrunk_polygon
+        else:
+            polygon_for_projection = support_polygon
+
+        com_exec[:2] = self._project_point_to_convex_polygon(com_exec[:2], polygon_for_projection)
+        return com_exec
+
     def apply_ctrl_filter(self, ctrl_raw: np.ndarray) -> np.ndarray:
         """
         对控制指令应用低通滤波
@@ -356,23 +482,31 @@ class SpiderIK:
         self.last_plan = plan
 
         # update support polygon from contact_state (use planned positions)
-        contacts = [leg for leg, c in plan.contact_state.items() if bool(c)]
+        contacts, support_polygon = self._compute_support_polygon(plan)
 
         contacts_bool = []
         for leg in ALL_LEGS:
             contacts_bool.append(1.0 if leg in contacts else 0.0)
         # print("Contacts bool:", contacts_bool)
-        support_polygon = [np.asarray(plan.target_pos[leg][0:2], dtype=float) for leg in contacts]
-        if len(support_polygon) >= 3:
+        if support_polygon.shape[0] >= 3:
             self.com_constraint.polygon = np.array(support_polygon, dtype=float)
 
         # log targets
         if self.logger is not None:
+            com_exec_for_log = self._compute_projected_com_target(plan.target_pos['com'], support_polygon)
             self.logger.write_row(
                 name='com_target',
                 filename='com_target_data.csv',
-                header=['t', 'x', 'y', 'z'],
-                row=[self.t, float(plan.target_pos['com'][0]), float(plan.target_pos['com'][1]), float(plan.target_pos['com'][2])],
+                header=['t', 'x', 'y', 'z', 'x_exec', 'y_exec', 'z_exec'],
+                row=[
+                    self.t,
+                    float(plan.target_pos['com'][0]),
+                    float(plan.target_pos['com'][1]),
+                    float(plan.target_pos['com'][2]),
+                    float(com_exec_for_log[0]),
+                    float(com_exec_for_log[1]),
+                    float(com_exec_for_log[2]),
+                ],
             )
 
             self.logger.write_row(
@@ -412,7 +546,27 @@ class SpiderIK:
                 header=['t', 'x', 'y', 'z'],
                 row=[self.t, float(LH_foot_world[0, 3]), float(LH_foot_world[1, 3]), float(LH_foot_world[2, 3])],
             )
-            
+            LF_foot_world = self.robot.get_T_world_frame(self.leg_foot_name_map['LF'])
+            self.logger.write_row(
+                name='LF_foot_world',
+                filename='LF_foot_world_data.csv',
+                header=['t', 'x', 'y', 'z'],
+                row=[self.t, float(LF_foot_world[0, 3]), float(LF_foot_world[1, 3]), float(LF_foot_world[2, 3])],
+            )
+            RF_foot_world = self.robot.get_T_world_frame(self.leg_foot_name_map['RF'])
+            self.logger.write_row(
+                name='RF_foot_world',
+                filename='RF_foot_world_data.csv',
+                header=['t', 'x', 'y', 'z'],
+                row=[self.t, float(RF_foot_world[0, 3]), float(RF_foot_world[1, 3]), float(RF_foot_world[2, 3])],
+            )
+            RH_foot_world = self.robot.get_T_world_frame(self.leg_foot_name_map['RH'])
+            self.logger.write_row(
+                name='RH_foot_world',
+                filename='RH_foot_world_data.csv',
+                header=['t', 'x', 'y', 'z'],
+                row=[self.t, float(RH_foot_world[0, 3]), float(RH_foot_world[1, 3]), float(RH_foot_world[2, 3])],
+            )
             tauff = self.data.ctrl
             self.logger.write_row(
                 name='tauff',
@@ -426,8 +580,8 @@ class SpiderIK:
         self.target_ori = plan.target_ori
 
         # set QP targets
-        if plan.is_stand:
-            self.body_pos_task.target_world = self.target_pos['com']
+        body_pos_exec = self._compute_projected_com_target(self.target_pos['com'], support_polygon)
+        self.body_pos_task.target_world = body_pos_exec
         self.body_ori_task.R_world_frame = np.asarray(self.target_ori['com'], dtype=float)
         for leg in ALL_LEGS:
             self.leg_tasks[leg].target_world = self.target_pos[leg]
@@ -469,6 +623,6 @@ class SpiderIK:
             self.visual.display_com_xy(com_world, name='com')
         except Exception:
             pass
-        self.visual.display_support_polygon(support_polygon)
+        self.visual.display_support_polygon(support_polygon.tolist() if isinstance(support_polygon, np.ndarray) else support_polygon)
 
         return self.data

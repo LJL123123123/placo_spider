@@ -8,5 +8,6 @@ demo*
 debug/
 *log
 *LOG*
-*test*
+*test
 .vscode/
+build/

@@ -1,4 +1,4 @@
-conda create -n deploy -c conda-forge python=3.11 pinocchio coal eigenpy doxystub eiquadprog
+conda create -n deploy -c conda-forge python=3.11 pinocchio coal eigenpy doxystub eiquadprog pygame
 
 cd /home/zenbot-ljl/placo
 mkdir build && cd build 

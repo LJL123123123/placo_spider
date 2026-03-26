@@ -16,10 +16,10 @@ from multiprocessing import shared_memory
 import time
 
 # Constants
-QPOS_SIZE = 19  # 7 (free joint) + 12 (actuated joints)
-CTRL_SIZE = 12  # 12 actuators
-KP_SIZE = 12
-KD_SIZE = 12
+QPOS_SIZE = 24  # 7 (free joint) + 12 (actuated joints) + 12 (fixed joints) = 31, but we only use 19 for qpos (free + actuated)
+CTRL_SIZE = 24  # 12 actuators + 12 (fixed joints) 
+KP_SIZE = 24 # 12 actuators + 12 (fixed joints)
+KD_SIZE = 24 # 12 actuators + 12 (fixed joints)
 
 # Shared memory names
 SHM_SIM_TO_CPG = "mujoco_sim_to_cpg"
@@ -219,14 +219,14 @@ if __name__ == "__main__":
     cpg_data = CPGToSimData(create=True)
     
     # Write test data
-    test_qpos = np.random.randn(19)
-    test_ctrl = np.random.randn(12)
+    test_qpos = np.random.randn(QPOS_SIZE)
+    test_ctrl = np.random.randn(CTRL_SIZE)
     sim_data.write(test_qpos, test_ctrl)
     
-    test_qpos_desired = np.random.randn(19)
-    test_ctrl_desired = np.random.randn(12)
-    test_kp = np.ones(12) * 50.0
-    test_kd = np.ones(12) * 5.0
+    test_qpos_desired = np.random.randn(QPOS_SIZE)
+    test_ctrl_desired = np.random.randn(CTRL_SIZE)
+    test_kp = np.ones(KP_SIZE) * 50.0
+    test_kd = np.ones(KD_SIZE) * 5.0
     cpg_data.write(test_qpos_desired, test_ctrl_desired, test_kp, test_kd)
     time.sleep(0.1)  # ensure timestamps differ
     # Read back
