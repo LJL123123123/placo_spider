@@ -24,7 +24,7 @@ import numpy as np
 
 from spider_ik import SpiderIK, SpiderIkConfig,SpiderIkData
 from typing import Dict, Optional, Tuple, List
-from shared_sim_data import SimToCPGData, CPGToSimData
+
 from dataclasses import dataclass, field
 import argparse
 
@@ -132,17 +132,7 @@ def main():
         kp = JOINT_KP.copy(),
         kd = JOINT_KD.copy(),
     )
-    # --- shared memory ---
-    sim_to_cpg: Optional[SimToCPGData] = None
-    cpg_to_sim: Optional[CPGToSimData] = None
-    if args.enable_shm:
-        # attach (MuJoCo creates)
-        sim_to_cpg = SimToCPGData(create=True)
-        atexit.register(lambda: sim_to_cpg.close())
-        atexit.register(lambda: sim_to_cpg.unlink())
-        cpg_to_sim = CPGToSimData(create=True)
-        atexit.register(lambda: cpg_to_sim.close())
-        atexit.register(lambda: cpg_to_sim.unlink())
+
     cfg = SpiderIkConfig(
         dt=0.001,
         gait_mode='quasi_static',
@@ -169,10 +159,10 @@ def main():
             data = SpiderIkData2SHM2DDSData(ikdata)
             time.sleep(cfg.dt)
 
-            # send to MuJoCo
+            # 计划在此进行共享内存通信（如果启用）
             if args.enable_shm and cpg_to_sim is not None:
                 try:
-                    cpg_to_sim.write(qpos_desired=data.q, ctrl_desired=data.ctrl, kp=JOINT_KP, kd=JOINT_KD)
+                    pass
                 except Exception:
                     pass
     except KeyboardInterrupt:
