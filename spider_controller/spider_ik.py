@@ -55,8 +55,8 @@ class SpiderIkConfig:
     gait_mode: str = 'quasi_static'
 
     # runtime toggles
-    enable_visual: bool = True
-    enable_logger: bool = True
+    enable_visual: bool = False
+    enable_logger: bool = False
 
     # gait params
     cycle_period: float = 2.0
@@ -77,12 +77,13 @@ class SpiderIkConfig:
     body_task_weight: float = 1e1
     body_task_ori_weight: float = 1e2
     com_constraint_weight: float = 1e2+50
+    regularization_weight: float = 1e-1
 
     alpha_max: float = 0.1  # 弧度，约 28.6 度
 
     # URDF root candidates
     body_height: float = 0.26
-    urdf_candidates: Tuple[str, ...] = ("../sqr_description/sqr_a1_description/urdf/",)
+    urdf_candidates: Tuple[str, ...] = ("../sqr_description/sqr_a1_description/urdf/sqr_a1_description.urdf",)
     # urdf_candidates: Tuple[str, ...] = ("../spider_sldasm/urdf",)
     
     # control filter parameters
@@ -96,6 +97,14 @@ class SpiderIkConfig:
             -0.7867905831961373,-0.016585433996785828,0.004100463013502682,
             -0.7867905831961349,0.016585433996786143,-0.00410046301350216,
             0.7899997871565964,-0.016583661182505084,0.004088938263039494]))
+
+    leg_foot_name_map: Dict[str, str] = field(default_factory=lambda: {
+        'LH': 'LR_wheel_link',
+        'RH': 'RR_wheel_link',
+        'RF': 'RF_wheel_link',
+        'LF': 'LF_wheel_link',
+    })
+    body_link_name: str = 'base_link'
 
 @dataclass
 class SpiderIkData:
@@ -201,12 +210,7 @@ class SpiderIK:
         self.solver.dt = 0.001
 
         # frames mapping
-        self.leg_foot_name_map = {
-            'LH': 'LR_wheel_link',
-            'RH': 'RR_wheel_link',
-            'RF': 'RF_wheel_link',
-            'LF': 'LF_wheel_link',
-        }
+        self.leg_foot_name_map = self.cfg.leg_foot_name_map.copy()
         
         self.leg_foot_joint_map = {
             'LH': [6,7,8],
@@ -236,11 +240,11 @@ class SpiderIK:
             self.leg_orien_tasks[leg].configure(self.leg_foot_name_map[leg], 'soft', float(self.cfg.leg_task_ori_weight))
 
         # base tasks
-        self.body_pos_task = self.solver.add_position_task('base_link', np.array(self.target_pos['com']))
-        self.body_pos_task.configure('base_link', 'soft', float(self.cfg.body_task_weight))
+        self.body_pos_task = self.solver.add_position_task(self.cfg.body_link_name, np.array(self.target_pos['com']))
+        self.body_pos_task.configure(self.cfg.body_link_name, 'soft', float(self.cfg.body_task_weight))
 
-        self.body_ori_task = self.solver.add_orientation_task('base_link', np.array(self.target_ori['com']))
-        self.body_ori_task.configure('base_link', 'soft', float(self.cfg.body_task_ori_weight))
+        self.body_ori_task = self.solver.add_orientation_task(self.cfg.body_link_name, np.array(self.target_ori['com']))
+        self.body_ori_task.configure(self.cfg.body_link_name, 'soft', float(self.cfg.body_task_ori_weight))
 
         # com polygon constraint (placeholder init polygon, will update each loop)
         init_polygon = np.array([
@@ -248,7 +252,7 @@ class SpiderIK:
             np.array([0.371678, -0.372385]),
             np.array([-0.361251, -0.360544]),
         ])
-        self.regularization_task = self.solver.add_regularization_task(float(self.cfg.com_constraint_weight))
+        self.regularization_task = self.solver.add_regularization_task(float(self.cfg.regularization_weight))
         self.com_constraint = self.solver.add_com_polygon_constraint(init_polygon, float(self.cfg.polygon_margin))
         self.com_constraint.polygon = init_polygon
         self.com_constraint.configure('com_constraint', 'soft', float(self.cfg.com_constraint_weight))
@@ -291,7 +295,7 @@ class SpiderIK:
 
         # --- logger & visual ---
         self.logger = SpiderCsvLogger(base_dir='./debug') if self.enable_logger else None
-        self.visual = SpiderVisualizer(self.robot, enabled=self.enable_visual)
+        self.visual = SpiderVisualizer(self.robot, enabled=self.enable_visual) if self.enable_visual else None
 
         # --- control filter ---
         self.prev_ctrl = np.zeros(12, dtype=np.float64)  # 上一次的控制指令，用于滤波
@@ -617,12 +621,13 @@ class SpiderIK:
         self.data.ctrl = self.apply_ctrl_filter(self.data.ctrl)
 
         # visualization
-        self.visual.display_robot(self.data.q)
-        try:
-            com_world = self.robot.com_world()
-            self.visual.display_com_xy(com_world, name='com')
-        except Exception:
-            pass
-        self.visual.display_support_polygon(support_polygon.tolist() if isinstance(support_polygon, np.ndarray) else support_polygon)
+        if self.enable_visual: 
+            self.visual.display_robot(self.data.q)
+            try:
+                com_world = self.robot.com_world()
+                self.visual.display_com_xy(com_world, name='com')
+            except Exception:
+                pass
+            self.visual.display_support_polygon(support_polygon.tolist() if isinstance(support_polygon, np.ndarray) else support_polygon)
 
         return self.data
